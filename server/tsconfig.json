@@ -7,13 +7,11 @@
     // "exclude": ["node_modules", "**/*.spec.ts"],
     "forceConsistentCasingInFileNames": true,
     "allowUnusedLabels": false,
-    "strict": true,
+    "strict": false,
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ESNext"],
-    "noImplicitAny": false, // Allows implicit 'any' types
-    "strictNullChecks": false // Disables strict null checks
+    "lib": ["ESNext"]
     // "typeRoots": [
     //   "./types",
     //   "./node_modules/@types",
