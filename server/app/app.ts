@@ -3,6 +3,7 @@ import cors from "cors";
 import env from "dotenv";
 import CookeParser from "cookie-parser";
 import session from "express-session";
+import { RedisStore } from "connect-redis";
 import flash from "connect-flash";
 import express from "express";
 
@@ -44,9 +45,15 @@ app.use(express.static(path.join(__dirname, "uploads")));
 
 app.use(
   session({
-    secret: process.env.SESSOIN_SECRET!,
+    store: new RedisStore({ client: redis }),
+    secret: process.env.SESSOIN_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
   })
 );
 
@@ -74,6 +81,7 @@ app.use("/api/v1/artist", artistRoute);
 
 import adminAuthRoute from "../app/routes/ejs/auth/authRoute";
 import adminDashboardRoute from "../app/routes/ejs/dashboard/dashboardRoute";
+import redis from "./config/redis";
 
 app.use(adminAuthRoute);
 app.use(adminDashboardRoute);
