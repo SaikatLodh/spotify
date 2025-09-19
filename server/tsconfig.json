@@ -10,9 +10,8 @@
     "strict": true,
     "target": "ES2022",
     "module": "commonjs",
-    "moduleResolution": "node",
-    "lib": ["ES2022"],
-    "ignoreDeprecations": "6.0"
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"]
     // "typeRoots": [
     //   "./types",
     //   "./node_modules/@types",
