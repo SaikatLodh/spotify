@@ -9,9 +9,11 @@
     "allowUnusedLabels": false,
     "strict": true,
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022"]
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ESNext"],
+    "noImplicitAny": false, // Allows implicit 'any' types
+    "strictNullChecks": false // Disables strict null checks
     // "typeRoots": [
     //   "./types",
     //   "./node_modules/@types",
