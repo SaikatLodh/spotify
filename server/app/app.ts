@@ -4,6 +4,7 @@ import env from "dotenv";
 import CookeParser from "cookie-parser";
 import session from "express-session";
 import { RedisStore } from "connect-redis";
+import redis from "./config/redis";
 import flash from "connect-flash";
 import express from "express";
 
@@ -81,7 +82,6 @@ app.use("/api/v1/artist", artistRoute);
 
 import adminAuthRoute from "../app/routes/ejs/auth/authRoute";
 import adminDashboardRoute from "../app/routes/ejs/dashboard/dashboardRoute";
-import redis from "./config/redis";
 
 app.use(adminAuthRoute);
 app.use(adminDashboardRoute);
