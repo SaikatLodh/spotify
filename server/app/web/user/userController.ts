@@ -9,10 +9,10 @@ import {
   updatePasswordSchema,
   updateUserSchema,
 } from "../../helpers/validator/user/userValidator";
-import fs from "fs";
+import { unlinkSync } from "fs";
 
 class UserController {
-  async getProfile(req: Request, res: Response) {
+  async getProfile(req: RequestWithFile, res: Response) {
     try {
       const userId = req.user._id;
 
@@ -56,7 +56,7 @@ class UserController {
       const { error } = updateUserSchema.validate(req.body);
 
       if (error) {
-        if (file) fs.unlinkSync(file!);
+        if (file) unlinkSync(file!);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -79,7 +79,7 @@ class UserController {
           );
 
           if (!deleteimage) {
-            if (file) fs.unlinkSync(file!);
+            if (file) unlinkSync(file!);
             return res
               .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
               .json(
@@ -151,7 +151,7 @@ class UserController {
     }
   }
 
-  async updatePassword(req: Request, res: Response) {
+  async updatePassword(req: RequestWithFile, res: Response) {
     try {
       const userId = req.user._id;
       const { oldPassword, newPassword, confirmPassword } = req.body;
@@ -209,7 +209,7 @@ class UserController {
     }
   }
 
-  async deleteAccount(req: Request, res: Response) {
+  async deleteAccount(req: RequestWithFile, res: Response) {
     try {
       const userId = req.user._id;
       const user = await User.findById(userId);
