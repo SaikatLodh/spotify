@@ -1,0 +1,188 @@
+.login-page {
+  background-color: #f0f2f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border-radius: 12px;
+  text-align: center;
+}
+.login-container h1 {
+  font-size: 2rem;
+  color: #1db954; /* Spotify's green */
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+.login-container .form-control {
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+}
+.login-container .btn-primary {
+  background-color: #1db954; /* Spotify's green */
+  border-color: #1db954;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+.login-container .btn-primary:hover {
+  background-color: #1aa344;
+  border-color: #1aa344;
+}
+.form-label {
+  font-weight: 600;
+  color: #555;
+  text-align: left;
+  width: 100%;
+}
+
+.form-check {
+  text-align: left;
+  margin-bottom: 20px;
+}
+.form-check-input:checked {
+  background-color: #1db954;
+  border-color: #1db954;
+}
+#remember {
+  cursor: pointer;
+}
+
+#response {
+  margin: 10px 0px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 450px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border-radius: 12px;
+  text-align: center;
+}
+.form-container h1 {
+  font-size: 2rem;
+  color: #1db954; /* Spotify's green */
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+.form-container p.subtitle {
+  color: #555;
+  margin-bottom: 25px;
+}
+.form-container .form-control {
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+}
+.form-container .btn-primary {
+  background-color: #1db954; /* Spotify's green */
+  border-color: #1db954;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+.form-container .btn-primary:hover {
+  background-color: #1aa344;
+  border-color: #1aa344;
+}
+.form-label {
+  font-weight: 600;
+  color: #555;
+  text-align: left;
+  width: 100%;
+}
+.alert {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.artist-page {
+  height: calc(100% - 120px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-container-plane {
+  width: 100%;
+  max-width: 450px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border-radius: 12px;
+  text-align: center;
+  margin: 20px 0px;
+}
+.form-container-plane h1 {
+  font-size: 2rem;
+  color: #1db954; /* Spotify's green */
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+.form-container-plane p.subtitle {
+  color: #555;
+  margin-bottom: 25px;
+}
+.form-container-plane .form-control,
+.form-select {
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+}
+.form-container-plane .btn-primary {
+  background-color: #1db954; /* Spotify's green */
+  border-color: #1db954;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+.form-container-plane .btn-primary:hover {
+  background-color: #1aa344;
+  border-color: #1aa344;
+}
+.form-label-plane {
+  font-weight: 600;
+  color: #555;
+  text-align: left;
+  width: 100%;
+}
+.form-check-label-plane {
+  font-weight: normal;
+}
+
+.plan-page {
+  width: 100%;
+  display: flex;
+  height: 81%;
+
+  justify-content: center;
+  align-items: center;
+}
+
+.sidbar-logout {
+  cursor: pointer;
+}

@@ -1,0 +1,71 @@
+const endpoints = {
+  auth: {
+    sendotp: "/auth/sendotp",
+    verifyotp: "/auth/verifyotp",
+    register: "/auth/register",
+    login: "/auth/login",
+    logout: "/auth/logout",
+    forgotPasswordSendMail: "/auth/forgotsendemail",
+    forgotResetPassword: "/auth/forgotresetpassword",
+    googlesignup: "/auth/googlesignup",
+    googlesignin: "/auth/googlesignin",
+    refreshtoken: "/auth/refreshtoken",
+    facebooksignup: "/auth/facebooksignup",
+    facebooksignin: "/auth/facebooksignin",
+  },
+  user: {
+    getuser: "/user/profile",
+    updateUser: "/user/update-profile",
+    changePassword: "/user/update-password",
+    deleteAccount: "/user/delete-account",
+  },
+  album: {
+    createAlbum: "/album/create-album",
+    allAlbum: "/album/get-all-albums",
+    recent: "/album/get-all-recent-albums",
+    trending: "/album/get-all-trending-albums",
+    madeforYou: "/album/get-all-made-for-you-albums",
+    getSingleAlbum: "/album/get-album-by-id",
+    getArtistAlbum: "/album/get-albums-by-artist",
+    getSingleArtistAlbum: "/album/get-single-albums-by-artist",
+    updateAlbum: "/album/update-album",
+    deleteAlbum: "/album/delete-album",
+    publishUnPublishAlbum: "/album/is-published-album",
+  },
+  song: {
+    createSong: "/songs/create-song",
+    getSongsBySearch: "/songs/get-songs-by-search",
+    getAllSongsByAlbum: "/songs/get-all-songs-by-album",
+    getSongById: "/songs/get-song-by-id",
+    updateSong: "/songs/update-song",
+    deleteSong: "/songs/delete-song",
+    listenSong: "/songs/listen-song",
+    downloadSong: "/songs/download-song",
+  },
+  playlist: {
+    createPlaylist: "/playlist/create-playlist",
+    getplaylist: "/playlist/get-playlists",
+    getSinglePlaylist: "/playlist/get-playlist-by-id",
+    updatePlaylist: "/playlist/update-playlist",
+    deletePlaylist: "/playlist/delete-playlist",
+    addAndRemoveSong: "/playlist/add-and-remove-songs",
+  },
+  likeSong: {
+    likeSong: "/likesong/like-song",
+    getLikedSongs: "/likesong/get-liked-songs",
+  },
+  subcriptionPlane: {
+    getSubcriptionPlane: "/subscriptionplane/get-subscriptions-planes",
+  },
+  subscription: {
+    createSubscription: "/subscription/create-subscription",
+    getKeys: "/subscription/get-keys",
+    verifySubscription: "/subscription/verify-subscription",
+    expireSubscription: "/subscription/expire-subscription",
+  },
+  artist: {
+    dashboard: "/artist/dashboard",
+  },
+};
+
+export default endpoints;

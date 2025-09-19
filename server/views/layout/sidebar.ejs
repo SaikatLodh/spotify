@@ -1,0 +1,155 @@
+<ul
+  class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
+  id="accordionSidebar"
+>
+
+  <a
+    class="sidebar-brand d-flex align-items-center justify-content-center"
+    href="/"
+  >
+    <div class="sidebar-brand-icon rotate-n-15">
+     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="40" height="40" viewBox="0 0 48 48">
+<circle cx="24" cy="24" r="20" fill="#6be3a2"></circle><path fill="#324561" d="M35.643,21.502c-0.155,0-0.313-0.036-0.461-0.113c-6.745-3.517-14.513-4.338-21.873-2.308	c-0.533,0.147-1.083-0.166-1.229-0.698s0.166-1.083,0.698-1.229c7.847-2.164,16.134-1.29,23.328,2.462	c0.49,0.255,0.68,0.859,0.425,1.349C36.352,21.307,36.004,21.502,35.643,21.502z"></path><path fill="#324561" d="M33.055,27.272c-0.153,0-0.309-0.035-0.455-0.11c-5.427-2.78-11.677-3.455-17.603-1.901	c-0.533,0.142-1.081-0.179-1.221-0.713c-0.141-0.534,0.179-1.081,0.713-1.221c6.398-1.68,13.154-0.95,19.022,2.056	c0.491,0.252,0.686,0.854,0.434,1.346C33.769,27.073,33.418,27.272,33.055,27.272z"></path><path fill="#324561" d="M30.354,32.938c-0.147,0-0.298-0.033-0.439-0.103c-4.056-1.992-8.722-2.51-13.13-1.462	c-0.543,0.125-1.078-0.205-1.204-0.742c-0.128-0.537,0.204-1.076,0.741-1.204c4.865-1.153,10.005-0.582,14.474,1.613	c0.496,0.243,0.7,0.842,0.457,1.338C31.078,32.733,30.723,32.938,30.354,32.938z"></path>
+</svg>
+    </div>
+    <div class="sidebar-brand-text mx-3">Spotify</sup></div>
+  </a>
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider my-0" />
+
+  <!-- Nav Item - Dashboard -->
+  <li class="nav-item">
+    <a class="nav-link" href="/">
+      <i class="fas fa-fw fa-tachometer-alt"></i>
+      <span>Dashboard</span></a
+    >
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider" />
+
+  <li class="nav-item">
+    <a class="nav-link" href="/createartist">
+      <i class="fa-brands fa-creative-commons-by"></i>
+      <span>Create Artist</span></a
+    >
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider" />
+
+  <li class="nav-item">
+    <a class="nav-link" href="/createplans">
+      <i class="fa-solid fa-money-bill-wave"></i>
+      <span>Create Plans</span></a
+    >
+  </li>
+
+  <hr class="sidebar-divider" />
+
+  <li class="nav-item">
+    <a class="nav-link" href="/plans">
+      <i class="fa-solid fa-money-bill-wave"></i>
+      <span>Plans</span></a
+    >
+  </li>
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider" />
+
+  <li class="nav-item">
+    <a class="nav-link" href="/albums">
+      <i class="fa-solid fa-record-vinyl"></i>
+      <span>Albums</span></a
+    >
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider" />
+
+  <li class="nav-item">
+    <a class="nav-link" href="/songs">
+  <i class="fa-solid fa-guitar"></i>
+      <span>Songs</span></a
+    >
+  </li>
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider" />
+
+  <li class="nav-item">
+    <a class="nav-link" href="/users">
+      <i class="fa-solid fa-users"></i>
+      <span>Users</span></a
+    >
+  </li>
+
+
+
+<!-- Divider -->
+  <hr class="sidebar-divider" />
+
+  <!-- Heading -->
+
+  <!-- Nav Item - Pages Collapse Menu -->
+  <li class="nav-item">
+    <a
+      class="nav-link collapsed"
+      href="#"
+      data-toggle="collapse"
+      data-target="#collapsePages"
+      aria-expanded="true"
+      aria-controls="collapsePages"
+    >
+      <i class="fas fa-fw fa-folder"></i>
+      <span>Account</span>
+    </a>
+    <div
+      id="collapsePages"
+      class="collapse"
+      aria-labelledby="headingPages"
+      data-parent="#accordionSidebar"
+    >
+      <div class="bg-white py-2 collapse-inner rounded sidbar-logout">
+        <a href="/updateprofile" class="collapse-item">Update Profile</a>
+        <a href="/changepassword" class="collapse-item">Change Password</a>
+        <div
+        class="collapse-item cursor-pointer log-out"
+        >
+          <button type="submit" class="btn btn-link p-0 text-left" id="logout-handler">
+            Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </li>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider d-none d-md-block" />
+
+  <!-- Sidebar Toggler (Sidebar) -->
+  <div class="text-center d-none d-md-inline">
+    <button class="rounded-circle border-0" id="sidebarToggle"></button>
+  </div>
+</ul>
+
+<script>
+  $("#logout-handler").click(function () {
+    $.ajax({
+      type: "GET",
+      url: "/admin/logout",
+      dataType: "json",
+      success: function (response) {
+        console.log(response);
+        window.location.href = "/login";
+      },
+      error: function (error) {
+        console.log(error);
+      },
+    });
+  });
+</script>

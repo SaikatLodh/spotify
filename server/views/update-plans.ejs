@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./layout/head.ejs') %>
+  <style></style>
+  <body id="page-top">
+    <div id="wrapper">
+      <%- include('./layout/sidebar.ejs') %>
+
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('./layout/navbar.ejs') %>
+          <div class="artist-page">
+            <div class="form-container-plane">
+              <div id="response"></div>
+              <h1>Update Plan</h1>
+              <p class="subtitle">
+                Please update the details for the subscription plan.
+              </p>
+
+              <form method="POST" id="updatePlan">
+                <div class="mb-3">
+                  <label for="planName" class="form-label-plane"
+                    >Plan Name</label
+                  >
+                  <select
+                    class="form-select"
+                    id="planName"
+                    name="planName"
+                    required
+                  >
+                    <option value="" disabled>Choose...</option>
+                    <option value="Standard" <%= getPlan.planName === 'Standard' ? 'selected' : '' %>>Standard</option>
+                    <option value="Pro" <%= getPlan.planName === 'Pro' ? 'selected' : '' %>>Pro</option>
+                    <option value="Premium" <%= getPlan.planName === 'Premium' ? 'selected' : '' %>>Premium</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="price" class="form-label-plane">Price</label>
+                  <select class="form-select" id="price" name="price" required>
+                    <option value="" disabled>Choose...</option>
+                    <option value="199" <%= getPlan.price == 199 ? 'selected' : '' %>>₹199</option>
+                    <option value="399" <%= getPlan.price == 399 ? 'selected' : '' %>>₹399</option>
+                    <option value="499" <%= getPlan.price == 499 ? 'selected' : '' %>>₹499</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="duration" class="form-label-plane"
+                    >Duration</label
+                  >
+                  <select
+                    class="form-select"
+                    id="duration"
+                    name="duration"
+                    required
+                  >
+                    <option value="" disabled>Choose...</option>
+                    <option value="3 months" <%= getPlan.duration === '3 months' ? 'selected' : '' %>>3 months</option>
+                    <option value="6 months" <%= getPlan.duration === '6 months' ? 'selected' : '' %>>6 months</option>
+                    <option value="12 months" <%= getPlan.duration === '12 months' ? 'selected' : '' %>>12 months</option>
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label-plane d-block">Features</label>
+                  <div class="form-check text-start">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="features[]"
+                      value="Unlimited Like Songs"
+                      id="feature1"
+                      <%= getPlan.features && getPlan.features.includes('Unlimited Like Songs') ? 'checked' : '' %>
+                    />
+                    <label class="form-check-label-plans" for="feature1"
+                      >Unlimited Like Songs</label
+                    >
+                  </div>
+                  <div class="form-check text-start">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="features[]"
+                      value="Unlimited Create Playlists"
+                      id="feature2"
+                      <%= getPlan.features && getPlan.features.includes('Unlimited Create Playlists') ? 'checked' : '' %>
+                    />
+                    <label class="form-check-label-plans" for="feature2"
+                      >Unlimited Create Playlists</label
+                    >
+                  </div>
+                  <div class="form-check text-start">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="features[]"
+                      value="Download All Songs"
+                      id="feature3"
+                      <%= getPlan.features && getPlan.features.includes('Download All Songs') ? 'checked' : '' %>
+                    />
+                    <label class="form-check-label-plans" for="feature3"
+                      >Download All Songs</label
+                    >
+                  </div>
+                 
+                 
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Update Plan
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <%- include('./layout/footer.ejs') %>
+      </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+  </body>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script src="/vendor/chart.js/Chart.min.js"></script>
+
+  <script>
+    const slugId = "<%= slugId %>";
+    $(document).ready(function () {
+      $("#updatePlan").submit(function (event) {
+        event.preventDefault();
+        $("#response").html("");
+        $("#updatePlan button").prop("disabled", true).text("Updating...");
+        $.ajax({
+          type: "PUT",
+          url: `/admin/updateplanes/${slugId}`,
+          data: $("#updatePlan").serialize(),
+          dataType: "json",
+          success: function (response) {
+            $("#updatePlan button").prop("disabled", false).text("Update");
+            $("#response").html(
+              `<p style="color:green;">${response?.message}</p>`
+            );
+            window.location.href = "/plans";
+          },
+          error: function (error) {
+            $("#updatePlan button").prop("disabled", false).text("Update");
+            $("#response").html(
+              `<p style="color:red;">${error?.responseJSON?.message}</p>`
+            );
+          },
+        });
+      });
+    });
+  </script>
+</html>

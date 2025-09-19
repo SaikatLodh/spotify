@@ -1,0 +1,101 @@
+<nav
+  class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow"
+>
+  <!-- Topbar Navbar -->
+  <ul class="navbar-nav ml-auto">
+    <div class="topbar-divider d-none d-sm-block"></div>
+
+    <!-- Nav Item - User Information -->
+    <li class="nav-item dropdown no-arrow">
+      <a
+        class="nav-link dropdown-toggle"
+        href="#"
+        id="userDropdown"
+        role="button"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <span class="mr-2 d-none d-lg-inline text-gray-600 small profile-name"
+          >Douglas McGee</span
+        >
+        <img class="img-profile rounded-circle" src="img/undraw_profile.svg" style="object-fit: cover;"/>
+      </a>
+      <!-- Dropdown - User Information -->
+      <div
+        class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+        aria-labelledby="userDropdown"
+      >
+        <a class="dropdown-item" href="/updateprofile">
+          <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+          Update Profile
+        </a>
+        <a class="dropdown-item" href="/changepassword">
+          <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+          Change Password
+        </a>
+
+        <div class="dropdown-divider"></div>
+        <a
+          class="dropdown-item"
+          href="#"
+          data-toggle="modal"
+          data-target="#logoutModal"
+          id="logout"
+        >
+          <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+          Logout
+        </a>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+<script>
+  $.ajax({
+    type: "GET",
+    url: "/admin/profile",
+    dataType: "json",
+    success: function (response) {
+      fillData(response.data);
+    },
+    error: function (error) {
+      console.log(error);
+    },
+  });
+
+  function fillData(response) {
+    $(".img-profile").attr(
+      "src",
+      response?.profilePicture?.url || "img/undraw_profile.svg"
+    );
+    $(".profile-name").text(response.fullName);
+
+    const pathname = window.location.pathname;
+
+    if (pathname == "/updateprofile") {
+      $(".update-profile-image").attr(
+        "src",
+        response?.profilePicture?.url || "img/undraw_profile.svg"
+      );
+      $("#fullName").val(response.fullName);
+    }
+  }
+</script>
+
+<script>
+  $("#logout").click(function () {
+    $.ajax({
+      type: "GET",
+      url: "/admin/logout",
+      dataType: "json",
+      success: function (response) {
+        console.log(response);
+        window.location.href = "/login";
+      },
+      error: function (error) {
+        console.log(error);
+      },
+    });
+  });
+</script>

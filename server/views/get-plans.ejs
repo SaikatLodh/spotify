@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./layout/head.ejs') %>
+  <style>
+    .card {
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  height: 522px;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.card-header-plan {
+  background-color: #1db954; /* Spotify Green */
+  color: white;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  text-align: center;
+  padding: 20px;
+}
+.card-header-plan h3 {
+  margin-bottom: 0;
+  font-weight: bold;
+}
+.card-body {
+  padding: 30px;
+}
+.card-body .price {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+.card-body .duration {
+  color: #888;
+  font-size: 1rem;
+  margin-bottom: 25px;
+}
+.features-list {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  margin-bottom: 30px;
+}
+.features-list li {
+  margin-bottom: 10px;
+  color: #555;
+  font-weight: 500;
+}
+.features-list li i {
+  color: #1db954;
+  margin-right: 10px;
+}
+.card-footer {
+  background-color: #ffffff;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+.btn-edit,
+.btn-delete {
+  font-weight: bold;
+}
+.btn-edit {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+.btn-delete {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+  </style>
+  <body id="page-top">
+    <div id="wrapper">
+      <%- include('./layout/sidebar.ejs') %>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content"><%- include('./layout/navbar.ejs') %>
+        <div class="plan-page" >
+         <div class="container">
+        <h1 class="text-center mb-5">Subscription Plans</h1>
+        <div class="row g-4 get-row">
+           
+        </div>
+        </div>
+</div>
+        <%- include('./layout/footer.ejs') %>
+      </div>
+    </div>
+
+      
+
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+  </body>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <script src="js/sb-admin-2.min.js"></script>
+
+  <script src="vendor/chart.js/Chart.min.js"></script>
+
+  <script>
+   function getData(){
+    $.ajax({
+        type:"GET",
+        url:"/admin/getplans",
+        dataType:"json",
+        success:function(response){
+           
+            addData(response.data);
+        },
+        error:function(error){
+            console.log(error);
+        }
+    })
+   }
+
+   function addData(data){
+const getRow = $(".get-row")
+getRow.empty();
+
+if(data && data.length > 0){
+    data.forEach(element => {
+        const addData = `<div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header-plan">
+                                <h3>${element.planName}</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="price">₹${element.price}</div>
+                                <div class="duration">${element.duration}</div>
+                                <ul class="features-list">
+                                   ${element.features.map(feature => `<li><i class="fas fa-check-circle"></i> ${feature}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between">
+                                <a href="${window.location.origin}/updateplanes/${element.slug}" class="btn btn-primary btn-edit">Edit</a>
+                              <button type="submit" class="btn btn-danger btn-delete delete-form" data-id="${element.slug}">Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+        getRow.append(addData);
+    });
+}else{
+    const addData = ` <div class="col-12 text-center">
+                    <div class="alert alert-info" role="alert">
+                        No plans available.
+                    </div>
+                </div>`;
+getRow.append(addData);
+}
+   }
+getData()
+
+$(document).on("click",".delete-form",function(){
+   const slugId = $(this).data("id");
+   deleteData(slugId);
+})
+
+function deleteData(slugId){
+    $(".delete-form").prop("disabled",true).text("deleting...");
+    $.ajax({
+        type:"DELETE",
+        url:`/admin/deleteplanes/${slugId}`,
+        dataType:"json",
+success:function(response){
+     $(".delete-form").prop("disabled",false).text("Delete");
+            getData();
+        },
+        error:function(error){
+             $(".delete-form").prop("disabled",false).text("Delete");
+            console.log(error);
+        }
+    })
+
+}
+
+  </script>  
+</html>

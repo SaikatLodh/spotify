@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./layout/head.ejs') %>
+
+  <body id="page-top">
+    <div id="wrapper">
+      <%- include('./layout/sidebar.ejs') %>
+
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('./layout/navbar.ejs') %>
+          <div class="artist-page">
+            <div class="form-container">
+              <div id="response"></div>
+              <h1>Update Profile</h1>
+              <p class="subtitle">Edit your full name and profile picture.</p>
+
+              <form method="POST" enctype="multipart/form-data" id="updateForm">
+                <div class="profile-pic-container">
+                  <img
+                    src=""
+                    alt="Profile Picture"
+                    class="update-profile-image"
+                    style="
+                      width: 100px;
+                      height: 100px;
+                      object-fit: cover;
+                      border-radius: 50%;
+                    "
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="fullName" class="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="fullName"
+                    name="fullName"
+                    value=""
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="profilePicture" class="form-label"
+                    >New Profile Picture</label
+                  >
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="profilePicture"
+                    name="profilePicture"
+                    accept="image/*"
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Update Profile
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <%- include('./layout/footer.ejs') %>
+      </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Page level plugins -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="js/demo/datatables-demo.js"></script>
+
+    <script>
+      const profilImage = document.querySelector(".update-profile-image");
+      const inputFile = document.querySelector("#profilePicture");
+      inputFile.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        const render = new FileReader();
+        render.addEventListener("load", () => {
+          profilImage.src = render.result;
+        });
+        render.readAsDataURL(file);
+      });
+    </script>
+
+    <script>
+      $(document).ready(function () {});
+    </script>
+
+    <script>
+      $(document).ready(function () {
+        $("#updateForm").submit(function (event) {
+          event.preventDefault();
+          $("#response").html("");
+          $("#updateForm button").prop("disabled", true).text("Updating...");
+          $.ajax({
+            type: "PUT",
+            url: "/admin/updateprofile",
+            data: new FormData(this),
+            contentType: false,
+            cache: false,
+            processData: false,
+            dataType: "json",
+            success: function (response) {
+              $("#updateForm button").prop("disabled", false).text("Update");
+              $("#response").html(
+                `<p style="color:green;">${response?.message}</p>`
+              );
+              window.location.href = "/updateprofile";
+            },
+            error: function (error) {
+              $("#updateForm button").prop("disabled", false).text("Update");
+              $("#response").html(
+                `<p style="color:red;">${error?.responseJSON?.message}</p>`
+              );
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

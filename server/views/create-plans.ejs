@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./layout/head.ejs') %>
+  <style></style>
+  <body id="page-top">
+    <div id="wrapper">
+      <%- include('./layout/sidebar.ejs') %>
+
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('./layout/navbar.ejs') %>
+          <div class="artist-page">
+            <div class="form-container-plane">
+              <div id="response"></div>
+              <h1>Create New Plan</h1>
+              <p class="subtitle">
+                Please define the details for a new subscription plan.
+              </p>
+
+              <form method="POST" id="createPlan">
+                <div class="mb-3">
+                  <label for="planName" class="form-label-plane"
+                    >Plan Name</label
+                  >
+                  <select
+                    class="form-select"
+                    id="planName"
+                    name="planName"
+                    required
+                  >
+                    <option selected disabled value="">Choose...</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Pro">Pro</option>
+                    <option value="Premium">Premium</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="price" class="form-label-plane">Price</label>
+                  <select class="form-select" id="price" name="price" required>
+                    <option selected disabled value="">Choose...</option>
+                    <option value="199">₹199</option>
+                    <option value="399">₹399</option>
+                    <option value="499">₹499</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="duration" class="form-label-plane"
+                    >Duration</label
+                  >
+                  <select
+                    class="form-select"
+                    id="duration"
+                    name="duration"
+                    required
+                  >
+                    <option selected disabled value="">Choose...</option>
+                    <option value="3 months">3 months</option>
+                    <option value="6 months">6 months</option>
+                    <option value="12 months">12 months</option>
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label-plane d-block">Features</label>
+                  <div class="form-check text-start">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="features[]"
+                      value="Unlimited Like Songs"
+                      id="feature1"
+                    />
+                    <label class="form-check-label-plans" for="feature1"
+                      >Unlimited Like Songs</label
+                    >
+                  </div>
+                  <div class="form-check text-start">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="features[]"
+                      value=" Unlimited Create Playlists"
+                      id="feature2"
+                    />
+                    <label class="form-check-label-plans" for="feature2"
+                      >Unlimited Create Playlists</label
+                    >
+                  </div>
+                  <div class="form-check text-start">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="features[]"
+                      value="Download All Songs"
+                      id="feature3"
+                    />
+                    <label class="form-check-label-plans" for="feature3"
+                      >Download All Songs</label
+                    >
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Create Plan
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <%- include('./layout/footer.ejs') %>
+      </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+  </body>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <script src="js/sb-admin-2.min.js"></script>
+
+  <script src="vendor/chart.js/Chart.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $("#createPlan").submit(function (event) {
+        event.preventDefault();
+        $("#response").html("");
+        $("#createPlan button").prop("disabled", true).text("Loading...");
+        $.ajax({
+          type: "POST",
+          url: "/admin/createplanes",
+          data: $("#createPlan").serialize(),
+          dataType: "json",
+          success: function (response) {
+            $("#createPlan button").prop("disabled", false).text("Create");
+            $("#response").html(
+              `<p style="color:green;">${response?.message}</p>`
+            );
+            ClearForm();
+            window.location.href = "/plans";
+          },
+          error: function (error) {
+            $("#createPlan button").prop("disabled", false).text("Create");
+            $("#response").html(
+              `<p style="color:red;">${error?.responseJSON?.message}</p>`
+            );
+          },
+        });
+      });
+
+      function ClearForm() {
+        $("#planName").val("");
+        $("#price").val("");
+        $("#duration").val("");
+        $("#feature1").prop("checked", false);
+        $("#feature2").prop("checked", false);
+        $("#feature3").prop("checked", false);
+        $("#feature4").prop("checked", false);
+        $("#feature5").prop("checked", false);
+      }
+    });
+  </script>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('../layout/head.ejs') %>
+
+  <body>
+    <div class="login-page">
+      <div class="form-container">
+        <div id="response"></div>
+        <h1>Send Email</h1>
+        <p class="subtitle">
+          Enter the recipient's email address to send a message.
+        </p>
+
+        <form method="POST" id="sendemail">
+          <div class="mb-4">
+            <label for="email" class="form-label">Recipient Email</label>
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              name="email"
+              value="<%= email %>"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+
+        <div style="margin-top: 10px">
+          <a href="/login" style="color: #1aa344"> Login </a>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    $(document).ready(function () {
+      $("#sendemail").submit(function (e) {
+        e.preventDefault();
+
+        $("#response").html("");
+
+        $("#sendemail button").prop("disabled", true).text("Sending...");
+
+        $.ajax({
+          type: "POST",
+          url: "/admin/sendemail",
+          data: $("#sendemail").serialize(),
+          dataType: "json",
+          success: function (response) {
+            $("#response").html(
+              `<p style="color:green;">${response?.message}</p>`
+            );
+
+            $("#sendemail button").prop("disabled", false).text("Send");
+          },
+          error: function (error) {
+            $("#response").html(
+              `<p style="color:red;">${error?.responseJSON?.message}</p>`
+            );
+
+            $("#sendemail button").prop("disabled", false).text("Send");
+          },
+        });
+      });
+    });
+  </script>
+</html>

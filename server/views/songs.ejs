@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./layout/head.ejs') %>
+
+  <body id="page-top">
+    <div id="wrapper">
+      <%- include('./layout/sidebar.ejs') %>
+
+      <!-- Content Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('./layout/navbar.ejs') %>
+
+          <div class="container-fluid">
+            <h1 class="h3 mb-2 text-gray-800">Songs</h1>
+
+            <div class="card shadow mb-4" style="margin-top: 30px">
+              <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Songs Table</h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table
+                    class="table table-bordered"
+                    id="dataTable"
+                    width="100%"
+                    cellspacing="0"
+                  >
+                    <thead>
+                      <tr>
+                        <th>Id</th>
+                        <th>Song name</th>
+                        <th>Album name</th>
+                        <th>Artist name</th>
+                        <th>Audio</th>
+                        <th>Thumbnail</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+
+                    <tfoot>
+                      <tr>
+                        <th>Id</th>
+                        <th>Song name</th>
+                        <th>Album name</th>
+                        <th>Artist name</th>
+                        <th>Audio</th>
+                        <th>Thumbnail</th>
+                        <th>Date</th>
+                      </tr>
+                    </tfoot>
+
+                    <tbody>
+                      <% if (getSongs && getSongs.length > 0) { %> <%
+                      getSongs.forEach((song)=>{ %>
+                      <tr>
+                        <td><%- song._id %></td>
+                        <td><%- song.title %></td>
+                        <th><%- song.album.title %></th>
+                        <td><%- song.artist.fullName %></td>
+                        <td class="d-flex justify-content-center align-items-center" style="height: 100%;">
+                          <audio controls>
+                            <source src="<%- song.audioUrl.url %>" />
+                          </audio>
+                        </td>
+                        <td>
+                          <img
+                            src="<%- song.imageUrl.url %>"
+                            alt=""
+                            style="
+                              width: 100px;
+                              height: 100px;
+                              object-fit: cover;
+                            "
+                          />
+                        </td>
+
+                       <td>
+                            <% 
+                              const date = new Date(song.createdAt);
+                              const month = date.getMonth() + 1;
+                              const day = date.getDate();
+                              const year = date.getFullYear();
+                              let hours = date.getHours();
+                              const minutes = date.getMinutes();
+                              const ampm = hours >= 12 ? 'pm' : 'am';
+                              
+                              // Convert to 12-hour format
+                              hours = hours % 12;
+                              hours = hours ? hours : 12; // the hour '0' should be '12'
+                              
+                              // Format minutes with leading zero if needed
+                              const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+                              
+                              // Format the date as "1/1/极25 11.30 am"
+                              const formattedDate = `${month}/${day}/${year} ${hours}.${formattedMinutes} ${ampm}`;
+                            %>
+                            <%- formattedDate %>
+                          </td>
+                      </tr>
+                      <%}); %> <% } else { %>
+                      <tr>
+                        <td colspan="9" class="text-center py-5">
+                          <div
+                            class="d-flex flex-column align-items-center justify-content-center"
+                          >
+                            <i
+                              class="bi bi-cart-check text-muted"
+                              style="font-size: 3rem; margin-bottom: 1rem"
+                            ></i>
+                            <h5 class="text-muted mb-2">No Orders Found</h5>
+                            <p class="text-muted">
+                              There are no orders placed in the system.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                      <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%- include('./layout/footer.ejs') %>
+      </div>
+    </div>
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing极min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Page level plugins -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="js/demo/datatables-demo.js"></script>
+  </body>
+</html>
