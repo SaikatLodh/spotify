@@ -33,7 +33,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         className="flex-1 flex h-full  p-2"
       >
         {pathname === "/log-in" ||
-        pathname === "/sign-up" ||
+        pathname === "/send-mail" ||
         location.pathname === "/send-mail" ||
         pathname === "/verify-otp" ||
         pathname === "/forgot-password-mail" ||

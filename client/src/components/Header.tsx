@@ -53,7 +53,7 @@ const Header = () => {
   return (
     <>
       {pathname === "/log-in" ||
-      pathname === "/sign-up" ||
+      pathname === "/send-mail" ||
       location.pathname === "/send-mail" ||
       pathname === "/verify-otp" ||
       pathname === "/forgot-password-mail" ||
