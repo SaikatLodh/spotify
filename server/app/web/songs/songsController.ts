@@ -19,7 +19,7 @@ import {
 } from "../../helpers/validator/songs/songsValidation";
 import fs from "fs";
 import { ALBUM, SONG } from "../../config/redisKeys";
-import Radis from "../../config/redis";
+import redis from "../../config/redis";
 import { ObjectId } from "mongodb";
 import axios from "axios";
 
@@ -104,8 +104,8 @@ class SongsController {
 
         fingdAlbum.songs.push(newSong._id);
         await fingdAlbum.save({ validateBeforeSave: false });
-        await Radis.del(`${ALBUM}:${artistId}`);
-        await Radis.del(`${SONG}:${albumId}`);
+        await redis.del(`${ALBUM}:${artistId}`);
+        await redis.del(`${SONG}:${albumId}`);
         return res
           .status(STATUS_CODES.CREATED)
           .json(
@@ -202,7 +202,7 @@ class SongsController {
       const albumId = req.params.albumId;
       const convertToObjectId = new ObjectId(albumId);
 
-      const getSongFromCache = await Radis.get(`${SONG}:${albumId}`);
+      const getSongFromCache = await redis.get(`${SONG}:${albumId}`);
 
       if (getSongFromCache) {
         return res
@@ -262,7 +262,7 @@ class SongsController {
           );
       }
 
-      await Radis.set(`${SONG}:${albumId}`, JSON.stringify(songs));
+      await redis.set(`${SONG}:${albumId}`, JSON.stringify(songs));
 
       return res
         .status(STATUS_CODES.OK)
@@ -284,7 +284,7 @@ class SongsController {
       const songId = req.params.songId;
       const albumId = req.params.albumId;
 
-      const getSongFromCache = await Radis.get(`${SONG}:${albumId}:${songId}`);
+      const getSongFromCache = await redis.get(`${SONG}:${albumId}:${songId}`);
 
       if (getSongFromCache) {
         return res
@@ -312,7 +312,7 @@ class SongsController {
           .json(new ApiError("Song not found", STATUS_CODES.NOT_FOUND));
       }
 
-      await Radis.set(`${SONG}:${albumId}:${songId}`, JSON.stringify(song));
+      await redis.set(`${SONG}:${albumId}:${songId}`, JSON.stringify(song));
 
       return res
         .status(STATUS_CODES.OK)
@@ -399,8 +399,8 @@ class SongsController {
               )
             );
         }
-        await Radis.del(`${SONG}:${albumId}`);
-        await Radis.del(`${SONG}:${albumId}:${songId}`);
+        await redis.del(`${SONG}:${albumId}`);
+        await redis.del(`${SONG}:${albumId}:${songId}`);
 
         return res
           .status(STATUS_CODES.OK)
@@ -424,8 +424,8 @@ class SongsController {
               )
             );
         }
-        await Radis.del(`${SONG}:${albumId}`);
-        await Radis.del(`${SONG}:${albumId}:${songId}`);
+        await redis.del(`${SONG}:${albumId}`);
+        await redis.del(`${SONG}:${albumId}:${songId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Song updated"));
@@ -484,9 +484,9 @@ class SongsController {
             )
           );
       }
-      await Radis.del(`${SONG}:${albumId}`);
-      await Radis.del(`${SONG}:${albumId}:${songId}`);
-      await Radis.del(`${ALBUM}:${artistId}`);
+      await redis.del(`${SONG}:${albumId}`);
+      await redis.del(`${SONG}:${albumId}:${songId}`);
+      await redis.del(`${ALBUM}:${artistId}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Song deleted"));

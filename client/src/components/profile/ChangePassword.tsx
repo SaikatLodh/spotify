@@ -17,7 +17,7 @@ const changePasswordSchema = z
       .max(30, "Old password must be at most 30 characters"),
     newPassword: z
       .string()
-      .min(8, "New password must be at least 8 characters")
+      .min(8, "New password must be at least 6 characters")
       .max(30, "New password must be at most 30 characters")
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,

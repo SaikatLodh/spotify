@@ -9,7 +9,7 @@ import { uploadFile, deleteImage } from "../../helpers/cloudinary";
 import { createPlaylistSchema } from "../../helpers/validator/playlist/playlistValidator";
 import fs from "fs";
 import { PLAYLIST } from "../../config/redisKeys";
-import Radis from "../../config/redis";
+import redis from "../../config/redis";
 import { ObjectId } from "mongodb";
 
 class PlaylistController {
@@ -92,7 +92,7 @@ class PlaylistController {
         }
       }
 
-      await Radis.del(`${PLAYLIST}:${userId}`);
+      await redis.del(`${PLAYLIST}:${userId}`);
 
       return res
         .status(STATUS_CODES.CREATED)
@@ -129,7 +129,7 @@ class PlaylistController {
           );
       }
 
-      const getRedis = await Radis.get(`${PLAYLIST}:${userId}`);
+      const getRedis = await redis.get(`${PLAYLIST}:${userId}`);
       if (getRedis) {
         const playlists = JSON.parse(getRedis);
         return res
@@ -152,7 +152,7 @@ class PlaylistController {
           );
       }
 
-      await Radis.setnx(`${PLAYLIST}:${userId}`, JSON.stringify(playlists));
+      await redis.setnx(`${PLAYLIST}:${userId}`, JSON.stringify(playlists));
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, playlists, "Playlists fetched"));
@@ -189,7 +189,7 @@ class PlaylistController {
           );
       }
 
-      const getRedis = await Radis.get(`${PLAYLIST}:${userId}:${slugId}`);
+      const getRedis = await redis.get(`${PLAYLIST}:${userId}:${slugId}`);
       if (getRedis) {
         const playlist = JSON.parse(getRedis);
         return res
@@ -273,7 +273,7 @@ class PlaylistController {
           .json(new ApiError("Playlist not found", STATUS_CODES.NOT_FOUND));
       }
 
-      await Radis.setnx(
+      await redis.setnx(
         `${PLAYLIST}:${userId}:${slugId}`,
         JSON.stringify(playlist)
       );
@@ -369,8 +369,8 @@ class PlaylistController {
             );
         }
 
-        await Radis.del(`${PLAYLIST}:${userId}`);
-        await Radis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        await redis.del(`${PLAYLIST}:${userId}`);
+        await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
 
         return res
           .status(STATUS_CODES.OK)
@@ -378,8 +378,8 @@ class PlaylistController {
       } else {
         playlist.title = title;
         await playlist.save({ validateBeforeSave: false });
-        await Radis.del(`${PLAYLIST}:${userId}`);
-        await Radis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        await redis.del(`${PLAYLIST}:${userId}`);
+        await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Playlist updated"));
@@ -432,8 +432,8 @@ class PlaylistController {
 
       playlist.isDeleted = true;
       await playlist.save({ validateBeforeSave: false });
-      await Radis.del(`${PLAYLIST}:${userId}`);
-      await Radis.del(`${PLAYLIST}:${userId}:${slugId}`);
+      await redis.del(`${PLAYLIST}:${userId}`);
+      await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Playlist deleted"));
@@ -507,8 +507,8 @@ class PlaylistController {
               )
             );
         }
-        await Radis.del(`${PLAYLIST}:${userId}`);
-        await Radis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        await redis.del(`${PLAYLIST}:${userId}`);
+        await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -534,8 +534,8 @@ class PlaylistController {
             );
         }
 
-        await Radis.del(`${PLAYLIST}:${userId}`);
-        await Radis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        await redis.del(`${PLAYLIST}:${userId}`);
+        await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
 
         return res
           .status(STATUS_CODES.OK)
