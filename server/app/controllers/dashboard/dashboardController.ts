@@ -62,7 +62,7 @@ class DashboardController {
         !totalEarningsByMonth
       ) {
         req.flash("error", "Something went wrong");
-        return res.redirect("/dashboard");
+        return res.redirect("/");
       }
 
       return res.render("dashboard", {
@@ -81,7 +81,7 @@ class DashboardController {
         "error",
         error instanceof Error ? error.message : String(error)
       );
-      return res.redirect("/dashboard");
+      return res.redirect("/");
     }
   }
 
