@@ -20,7 +20,6 @@ router.get(
 router.post(
   "/verify-subscription/:subscriptionId",
   verifyJwt,
-  checkRoles(["artist", "listner"]),
   subscriptionController.verifySubscription
 );
 router.get(

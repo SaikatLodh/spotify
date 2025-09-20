@@ -8,7 +8,7 @@ const router = express.Router();
 router.post(
   "/create-playlist",
   verifyJwt,
-  checkRoles(["artist"]),
+  checkRoles(["artist", "listner"]),
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "coverImage", maxCount: 1 },
@@ -31,7 +31,7 @@ router.get(
 router.patch(
   "/update-playlist/:slugId",
   verifyJwt,
-  checkRoles(["artist"]),
+  checkRoles(["artist", "listner"]),
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "coverImage", maxCount: 1 },
@@ -42,7 +42,7 @@ router.patch(
 router.delete(
   "/delete-playlist/:slugId",
   verifyJwt,
-  checkRoles(["artist"]),
+  checkRoles(["artist", "listner"]),
   playlistController.deletePlaylist
 );
 
