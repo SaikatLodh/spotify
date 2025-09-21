@@ -121,7 +121,7 @@ class SubscriptionController {
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
         req.body;
       const subscriptionId = req.params.subscriptionId;
-      const userId = req.user._id;
+      const userId = req.params.userId;
 
       const { error } = verifySubscriptionSchema.validate(req.body);
 

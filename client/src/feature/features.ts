@@ -74,7 +74,7 @@ const handelPayment = async (
     name: "Spotify",
     description: "Spotify Subscription",
     order_id: `${details?.id}`, // This is the order_id created in the backend
-    callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/subscription/verify-subscription/${details?.subscriptionId}`, // Your success URL
+    callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/subscription/verify-subscription/${details?.subscriptionId}/${user?._id}`, // Your success URL
     prefill: {
       name: `${user?.fullName}`,
       email: `${user?.email}`,

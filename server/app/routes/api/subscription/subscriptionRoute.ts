@@ -18,7 +18,7 @@ router.get(
   subscriptionController.getKeys
 );
 router.post(
-  "/verify-subscription/:subscriptionId",
+  "/verify-subscription/:subscriptionId/:userId",
   subscriptionController.verifySubscription
 );
 router.get(
