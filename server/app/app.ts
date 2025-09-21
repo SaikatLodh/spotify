@@ -7,12 +7,18 @@ import { RedisStore } from "connect-redis";
 import redis from "./config/redis";
 import flash from "connect-flash";
 import express from "express";
+import fs from "fs";
 
 const app = express();
 
 env.config({
   path: ".env",
 });
+
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 app.use(
   cors({
