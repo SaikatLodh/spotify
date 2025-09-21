@@ -19,7 +19,6 @@ router.get(
 );
 router.post(
   "/verify-subscription/:subscriptionId",
-  verifyJwt,
   subscriptionController.verifySubscription
 );
 router.get(
