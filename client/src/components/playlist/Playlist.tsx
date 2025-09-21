@@ -123,7 +123,7 @@ const Playlist = () => {
             <div className="flex p-6 gap-6 pb-8">
               <div>
                 <img
-                  src={(data && data[0].imageUrl.url) || "/images (2).jpg"}
+                  src={(data && data[0]?.imageUrl?.url) || "/images (2).jpg"}
                   alt=""
                   className="w-[240px] h-[240px] rounded-[10px] object-cover"
                 />

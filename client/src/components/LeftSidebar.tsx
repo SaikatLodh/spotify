@@ -97,7 +97,7 @@ const LeftSidebar = ({
                               <TooltipTrigger asChild>
                                 <img
                                   src={
-                                    playlist.imageUrl.url || "/images (2).jpg"
+                                    playlist?.imageUrl?.url || "/images (2).jpg"
                                   }
                                   alt=""
                                   className="w-[50px] h-[50px] rounded-[10px] object-cover"
