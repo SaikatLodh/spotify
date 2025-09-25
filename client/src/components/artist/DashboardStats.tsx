@@ -1,6 +1,6 @@
 import React from "react";
 import StatsCard from "./StatsCard";
-import { Download, Library, ListMusic, Users2 } from "lucide-react";
+import { Library, ListMusic, Users2, ThumbsUp } from "lucide-react";
 import { useGetDashboard } from "@/hooks/react-query/react-hooks/dashboard/dashbord";
 const DashboardStats = () => {
   const { data } = useGetDashboard();
@@ -28,9 +28,9 @@ const DashboardStats = () => {
       iconColor: "text-orange-500",
     },
     {
-      icon: Download,
-      label: "Total Downloads",
-      value: 2,
+      icon: ThumbsUp,
+      label: "Total Liked Songs",
+      value: data?.totalLikedSongCount || 0,
       bgColor: "bg-sky-500/10",
       iconColor: "text-sky-500",
     },

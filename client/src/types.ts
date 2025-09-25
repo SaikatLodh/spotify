@@ -137,4 +137,5 @@ export interface Dashboard {
   totalAlbums: number;
   totalSongs: number;
   totalListensCount: number;
+  totalLikedSongCount: number;
 }

@@ -14,19 +14,26 @@ class ArtistController {
         Album.countDocuments({ artistId, isDeleted: false, isPublished: true }),
         Song.countDocuments({ artistId, isDeleted: false }),
         Song.aggregate([{ $match: { artistId, isDeleted: false } }]),
+        Song.aggregate([
+          { $group: { _id: "$artistId", totalLiked: { $sum: "$liked" } } },
+        ]),
       ]);
 
-      const totalListensCount = totalListens.reduce(
-        (acc, song) => acc + song.listners.length,
-        0
-      );
+      const totalListensCount = totalListens.reduce((acc, song) => {
+        const uniqueListeners = new Set(song.listners);
+        return uniqueListeners.size;
+      }, 0);
+
+      const totalLikedSongCount = totalListens.reduce((acc, song) => {
+        return acc + song.liked.length;
+      }, 0);
 
       return res
         .status(STATUS_CODES.OK)
         .json(
           new ApiResponse(
             STATUS_CODES.OK,
-            { totalAlbums, totalSongs, totalListensCount },
+            { totalAlbums, totalSongs, totalListensCount, totalLikedSongCount },
             "Dashboard fetched"
           )
         );

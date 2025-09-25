@@ -101,17 +101,6 @@ const useDeleteSong = (songId: string, albumId: string) => {
 const useListenSong = (songId: string) => {
   return useMutation({
     mutationFn: () => listenSong(songId),
-    onSuccess: (data) => {
-      if (data.message) {
-        toast.success(data.message);
-      }
-    },
-    onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        const msg = error?.response?.data?.message;
-        toast.error(msg);
-      }
-    },
   });
 };
 

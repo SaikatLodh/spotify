@@ -27,7 +27,10 @@ import {
 } from "@/store/player/playerSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
-import { useDownloadSong } from "@/hooks/react-query/react-hooks/song/songHook";
+import {
+  useDownloadSong,
+  useListenSong,
+} from "@/hooks/react-query/react-hooks/song/songHook";
 
 const PlaybackControls = () => {
   const pathname = usePathname();
@@ -43,6 +46,7 @@ const PlaybackControls = () => {
     isShuffled,
     repeatMode,
   } = useSelector((state: RootState) => state.player);
+  const { mutate: listen } = useListenSong(currentSong?._id as string);
   const { user } = useSelector((state: RootState) => state.auth);
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -60,6 +64,10 @@ const PlaybackControls = () => {
     if (!audioRef.current) return;
     audioRef.current.volume = isMuted ? 0 : volume / 100;
   }, [volume, isMuted]);
+
+  useEffect(() => {
+    listen();
+  }, [currentSong, listen]);
 
   const onTimeUpdate = () => {
     if (!audioRef.current) return;
