@@ -9,6 +9,7 @@ import {
   loginValidation,
 } from "../../helpers/validator/auth/authValidation";
 import sendEmail from "../../helpers/sendEmail";
+import logger from "../../helpers/logger";
 
 class AuthController {
   async renderLogin(req: Request, res: Response) {
@@ -36,6 +37,8 @@ class AuthController {
     try {
       const { email, password, remember } = req.body;
 
+      logger.info(`Login attempt for email: ${email}`);
+
       if (remember) {
         JSON.parse(remember);
       }
@@ -43,6 +46,9 @@ class AuthController {
       const { error } = loginValidation(req.body);
 
       if (error) {
+        logger.warn(
+          `Login validation failed for email: ${email}: ${error.details[0].message}`
+        );
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -53,12 +59,14 @@ class AuthController {
       const checkUser: any = await User.findOne({ email: email });
 
       if (!checkUser) {
+        logger.warn(`Login failed: Email does not exist: ${email}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Email does not exist", STATUS_CODES.NOT_FOUND));
       }
 
       if (!checkUser.isVerified) {
+        logger.warn(`Login failed: User not verified: ${email}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("User is deleted", STATUS_CODES.BAD_REQUEST));
@@ -67,6 +75,7 @@ class AuthController {
       const comparePassword = await checkUser.comparePassword(password);
 
       if (!comparePassword) {
+        logger.warn(`Login failed: Incorrect password for email: ${email}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -75,6 +84,7 @@ class AuthController {
       }
 
       if (comparePassword) {
+        logger.info(`User logged in successfully: ${email}`);
         const tokens = await generateAccessAndRefreshToken(
           checkUser._id as string
         );
@@ -143,6 +153,11 @@ class AuthController {
         }
       }
     } catch (error) {
+      logger.error(
+        `Login error : ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -176,9 +191,14 @@ class AuthController {
     try {
       const { email } = req.body;
 
+      logger.info(`Password reset request for email: ${email}`);
+
       const { error } = forgotsendemailValidation(req.body);
 
       if (error) {
+        logger.warn(
+          `Password reset validation failed for email: ${email}: ${error.details[0].message}`
+        );
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -188,6 +208,7 @@ class AuthController {
 
       const checkEmail = await User.findOne({ email: email });
       if (!checkEmail) {
+        logger.warn(`Password reset failed: Invalid email: ${email}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -284,12 +305,17 @@ class AuthController {
           message: message,
         });
 
+        logger.info(`Password reset email sent to: ${email}`);
+
         return res
           .status(STATUS_CODES.OK)
           .json(
             new ApiResponse(STATUS_CODES.OK, {}, "Email sent successfully")
           );
       } catch (error: any) {
+        logger.error(
+          `Failed to send password reset email to ${email}: ${error.message}`
+        );
         checkEmail.forgotPasswordToken = undefined;
         checkEmail.forgotPasswordExpiry = undefined;
         await checkEmail.save({ validateBeforeSave: false });
@@ -300,6 +326,7 @@ class AuthController {
           );
       }
     } catch (error: any) {
+      logger.error(`Password reset error: ${error.message}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));

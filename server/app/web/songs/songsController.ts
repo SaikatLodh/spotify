@@ -22,6 +22,7 @@ import { ALBUM, SONG } from "../../config/redisKeys";
 import redis from "../../config/redis";
 import { ObjectId } from "mongodb";
 import axios from "axios";
+import logger from "../../helpers/logger";
 
 class SongsController {
   async createSong(req: RequestWithFile, res: Response) {
@@ -34,11 +35,13 @@ class SongsController {
       const imageFile = (
         req?.files as { [fieldname: string]: Express.Multer.File[] }
       )?.image?.[0]?.path;
+      logger.info(`Creating song: title=${title}, albumId=${albumId}, artistId=${artistId}`);
 
       const { error } = createSongSchema.validate(req.body);
       if (error) {
         if (audioFile) fs.unlinkSync(audioFile);
         if (imageFile) fs.unlinkSync(imageFile);
+        logger.warn(`Validation error for song creation: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -54,6 +57,7 @@ class SongsController {
       if (!fingdAlbum) {
         if (audioFile) fs.unlinkSync(audioFile);
         if (imageFile) fs.unlinkSync(imageFile);
+        logger.warn(`Album not found for song creation: albumId=${albumId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Album not found", STATUS_CODES.NOT_FOUND));
@@ -62,6 +66,7 @@ class SongsController {
       if (fingdAlbum.artistId.toString() !== artistId) {
         if (audioFile) fs.unlinkSync(audioFile);
         if (imageFile) fs.unlinkSync(imageFile);
+        logger.warn(`Unauthorized album access for song creation: albumId=${albumId}, artistId=${artistId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -92,6 +97,7 @@ class SongsController {
         });
 
         if (!newSong) {
+          logger.error("Song creation failed in database");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -106,6 +112,7 @@ class SongsController {
         await fingdAlbum.save({ validateBeforeSave: false });
         await redis.del(`${ALBUM}:${artistId}`);
         await redis.del(`${SONG}:${albumId}`);
+        logger.info("Song created successfully");
         return res
           .status(STATUS_CODES.CREATED)
           .json(
@@ -116,6 +123,7 @@ class SongsController {
             )
           );
       } else {
+        logger.error("Failed to upload audio or image files");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -126,6 +134,7 @@ class SongsController {
           );
       }
     } catch (error) {
+      logger.error(`Error creating song: ${error instanceof Error ? error.message : "Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -140,6 +149,7 @@ class SongsController {
   async getSongsBySearch(req: RequestWithFile, res: Response) {
     try {
       const name = req.query.name as string;
+      logger.info(`Searching songs by name: ${name}`);
 
       const songs = await Song.aggregate([
         {
@@ -177,15 +187,18 @@ class SongsController {
       ]);
 
       if (!songs) {
+        logger.warn(`No songs found for search term: ${name}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Songs not found", STATUS_CODES.NOT_FOUND));
       }
 
+      logger.info(`Songs search completed: found ${songs.length} songs for term "${name}"`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, songs, "Songs fetched"));
     } catch (error) {
+      logger.error(`Error searching songs: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -201,10 +214,12 @@ class SongsController {
     try {
       const albumId = req.params.albumId;
       const convertToObjectId = new ObjectId(albumId);
+      logger.info(`Fetching songs by album: albumId=${albumId}`);
 
       const getSongFromCache = await redis.get(`${SONG}:${albumId}`);
 
       if (getSongFromCache) {
+        logger.info(`Songs fetched from cache for album: ${albumId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -252,6 +267,7 @@ class SongsController {
       ]);
 
       if (!songs) {
+        logger.warn(`No songs found for album: ${albumId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(
@@ -263,11 +279,13 @@ class SongsController {
       }
 
       await redis.set(`${SONG}:${albumId}`, JSON.stringify(songs));
+      logger.info(`Songs fetched from database for album: ${albumId}, count: ${songs.length}`);
 
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, songs, "Songs fetched"));
     } catch (error) {
+      logger.error(`Error fetching songs by album: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -283,10 +301,12 @@ class SongsController {
     try {
       const songId = req.params.songId;
       const albumId = req.params.albumId;
+      logger.info(`Fetching single song: songId=${songId}, albumId=${albumId}`);
 
       const getSongFromCache = await redis.get(`${SONG}:${albumId}:${songId}`);
 
       if (getSongFromCache) {
+        logger.info(`Song fetched from cache: songId=${songId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -307,17 +327,20 @@ class SongsController {
       });
 
       if (!song) {
+        logger.warn(`Song not found: songId=${songId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Song not found", STATUS_CODES.NOT_FOUND));
       }
 
       await redis.set(`${SONG}:${albumId}:${songId}`, JSON.stringify(song));
+      logger.info(`Song fetched from database: songId=${songId}`);
 
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, song, "Song fetched"));
     } catch (error) {
+      logger.error(`Error fetching single song: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -336,10 +359,12 @@ class SongsController {
       const artistId = req.user?._id;
       const { title } = req.body;
       const imageFile = req?.file?.path;
+      logger.info(`Updating song: songId=${songId}, albumId=${albumId}, artistId=${artistId}, title=${title}`);
 
       const { error } = updateSongSchema.validate(req.body);
       if (error) {
         if (imageFile) fs.unlinkSync(imageFile);
+        logger.warn(`Validation error for song update: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -350,6 +375,7 @@ class SongsController {
       const song = await Song.findOne({ _id: songId, artistId });
 
       if (!song) {
+        logger.warn(`Unauthorized song update attempt: songId=${songId}, artistId=${artistId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -366,6 +392,7 @@ class SongsController {
         const deleteimage = await deleteImage(song.imageUrl.publicId);
 
         if (!deleteimage) {
+          logger.error("Failed to delete old image during song update");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -390,6 +417,7 @@ class SongsController {
         );
 
         if (!updatedSong) {
+          logger.error("Song update failed in database");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -401,6 +429,7 @@ class SongsController {
         }
         await redis.del(`${SONG}:${albumId}`);
         await redis.del(`${SONG}:${albumId}:${songId}`);
+        logger.info("Song updated successfully with new image");
 
         return res
           .status(STATUS_CODES.OK)
@@ -415,6 +444,7 @@ class SongsController {
         );
 
         if (!updatedSong) {
+          logger.error("Song update failed in database");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -426,11 +456,13 @@ class SongsController {
         }
         await redis.del(`${SONG}:${albumId}`);
         await redis.del(`${SONG}:${albumId}:${songId}`);
+        logger.info("Song updated successfully");
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Song updated"));
       }
     } catch (error) {
+      logger.error(`Error updating song: ${error instanceof Error ? error.message : "Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -447,9 +479,12 @@ class SongsController {
       const songId = req.params.songId;
       const albumId = req.params.albumId;
       const artistId = req.user?._id.toString();
+      logger.info(`Deleting song: songId=${songId}, albumId=${albumId}, artistId=${artistId}`);
+
       const song = await Song.findOne({ _id: songId, artistId });
 
       if (!song) {
+        logger.warn(`Unauthorized song deletion attempt: songId=${songId}, artistId=${artistId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -475,6 +510,7 @@ class SongsController {
       ]);
 
       if (!fast || !second) {
+        logger.error("Song deletion failed in database operations");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -487,10 +523,12 @@ class SongsController {
       await redis.del(`${SONG}:${albumId}`);
       await redis.del(`${SONG}:${albumId}:${songId}`);
       await redis.del(`${ALBUM}:${artistId}`);
+      logger.info("Song deleted successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Song deleted"));
     } catch (error) {
+      logger.error(`Error deleting song: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -506,10 +544,12 @@ class SongsController {
     try {
       const songId = req.params.songId;
       const userId = req.user?._id;
+      logger.info(`User listening to song: songId=${songId}, userId=${userId}`);
 
       const findSong = await Song.findOne({ _id: songId, isDeleted: false });
 
       if (!findSong) {
+        logger.warn(`Song not found for listening: songId=${songId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Song not found", STATUS_CODES.NOT_FOUND));
@@ -519,6 +559,7 @@ class SongsController {
         findSong && findSong.listners && findSong.listners.includes(userId);
 
       if (ckeckListner) {
+        logger.info(`User already listened to song: songId=${songId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -532,6 +573,7 @@ class SongsController {
         );
 
         if (!listinSong) {
+          logger.error("Failed to update song listeners");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -542,11 +584,13 @@ class SongsController {
             );
         }
 
+        logger.info(`Song listened successfully: songId=${songId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Song listin"));
       }
     } catch (error) {
+      logger.error(`Error listening to song: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -562,6 +606,7 @@ class SongsController {
     try {
       const publicId = req.params.publicId;
       const userId = req.user?._id;
+      logger.info(`Downloading song: publicId=${publicId}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -569,7 +614,8 @@ class SongsController {
         findUser?.subscriptionStatus === "Free" ||
         findUser?.subscriptionStatus === "Standard" ||
         findUser?.subscriptionStatus === "Pro"
-      )
+      ) {
+        logger.warn(`Unauthorized download attempt: userId=${userId}, subscriptionStatus=${findUser?.subscriptionStatus}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -578,10 +624,12 @@ class SongsController {
               STATUS_CODES.UNAUTHORIZED
             )
           );
+      }
 
       const result = download(publicId);
 
       if (!result) {
+        logger.error(`Public ID not found for download: publicId=${publicId}`);
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -595,6 +643,7 @@ class SongsController {
       const response = await axios.get(result, { responseType: "stream" });
 
       if (!response) {
+        logger.error("Failed to fetch song from cloud storage");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -605,6 +654,7 @@ class SongsController {
           );
       }
 
+      logger.info(`Song download initiated: publicId=${publicId}, userId=${userId}`);
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${publicId}.mp3"`
@@ -612,6 +662,7 @@ class SongsController {
       res.setHeader("Content-Type", "audio/mpeg");
       response.data.pipe(res);
     } catch (error) {
+      logger.error(`Error downloading song: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(

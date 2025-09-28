@@ -21,6 +21,7 @@ import {
   facebookSignupValidation,
   facebookSignInValidation,
 } from "../../helpers/validator/auth/authValidation";
+import logger from "../../helpers/logger";
 
 class authController {
   async sendOtp(req: Request, res: Response) {
@@ -30,6 +31,7 @@ class authController {
       const { error } = sendOtpValidation(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -40,6 +42,7 @@ class authController {
       const checkUser = await User.findOne({ email: email });
 
       if (checkUser) {
+        logger.error("Email already exists");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Email already exists", STATUS_CODES.BAD_REQUEST));
@@ -60,6 +63,7 @@ class authController {
       });
 
       if (!createOtp) {
+        logger.error("Failed to send otp");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -233,6 +237,7 @@ class authController {
         await sendEmail(mailOption);
         createOtp.isotpsend = true;
         await createOtp.save({ validateBeforeSave: false });
+        logger.info("Otp sent successfully");
         return res
           .status(STATUS_CODES.CREATED)
           .json(
@@ -241,6 +246,7 @@ class authController {
       } catch (error: any) {
         createOtp.isotpsend = false;
         await createOtp.save({ validateBeforeSave: false });
+        logger.error(error.message);
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -248,6 +254,7 @@ class authController {
           );
       }
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -261,6 +268,7 @@ class authController {
       const { error } = validateOtpValidation(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -271,24 +279,28 @@ class authController {
       const findOtp = await Otp.findOne({ email: email });
 
       if (!findOtp) {
+        logger.error("Email not found");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Email not found", STATUS_CODES.BAD_REQUEST));
       }
 
       if (!findOtp.isotpsend) {
+        logger.error("Otp not sent");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Otp not sent", STATUS_CODES.BAD_REQUEST));
       }
 
       if (findOtp.otp !== Number(otp)) {
+        logger.error("Invalid otp");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Invalid otp", STATUS_CODES.BAD_REQUEST));
       }
 
       if (findOtp.otpExpire && findOtp.otpExpire.getTime() < Date.now()) {
+        logger.error("Otp expired");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Otp expired", STATUS_CODES.BAD_REQUEST));
@@ -297,11 +309,12 @@ class authController {
       findOtp.isotpsend = false;
       findOtp.otpVerified = true;
       await findOtp.save({ validateBeforeSave: false });
-
+      logger.info("Otp verified");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Otp verified"));
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -315,6 +328,7 @@ class authController {
       const { error } = registerValidation(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -325,6 +339,7 @@ class authController {
       const verifyEmail = await Otp.findOne({ email: email });
 
       if (!verifyEmail) {
+        logger.error("Enter the verified email");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -333,6 +348,7 @@ class authController {
       }
 
       if (!verifyEmail.otpVerified) {
+        logger.error("Otp not verified");
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Otp not verified", STATUS_CODES.NOT_FOUND));
@@ -340,6 +356,7 @@ class authController {
 
       const checkEmail = await User.findOne({ email: email });
       if (checkEmail) {
+        logger.error("Email already exists");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Email already exists", STATUS_CODES.BAD_REQUEST));
@@ -353,6 +370,7 @@ class authController {
       });
 
       if (!createUser) {
+        logger.error("Failed to register user");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -363,6 +381,7 @@ class authController {
           );
       }
       await Otp.deleteOne({ email: email });
+      logger.info("User register successfully");
       return res
         .status(STATUS_CODES.CREATED)
         .json(
@@ -373,6 +392,7 @@ class authController {
           )
         );
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -386,6 +406,7 @@ class authController {
       const { error } = loginValidation(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -395,12 +416,14 @@ class authController {
 
       const checkUser: any = await User.findOne({ email: email });
       if (!checkUser) {
+        logger.error("Email does not exist");
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Email does not exist", STATUS_CODES.NOT_FOUND));
       }
 
       if (!checkUser.isVerified) {
+        logger.error("Email is not verified");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -409,12 +432,14 @@ class authController {
       }
 
       if (checkUser.role === "admin") {
+        logger.error("Admin can not login");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Admin can not login", STATUS_CODES.BAD_REQUEST));
       }
 
       if (checkUser.isDeleted) {
+        logger.error("User is deleted");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("User is deleted", STATUS_CODES.BAD_REQUEST));
@@ -423,6 +448,7 @@ class authController {
       const comparePassword = await checkUser.comparePassword(password);
 
       if (!comparePassword) {
+        logger.error("Password is incorrect");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -436,6 +462,7 @@ class authController {
         );
 
         if (!tokens || !tokens.accessToken || !tokens.refreshToken) {
+          logger.error("Failed to generate tokens");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -466,7 +493,7 @@ class authController {
           expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           path: "/",
         };
-
+        logger.info("User login successfully");
         return res
           .status(STATUS_CODES.OK)
           .cookie("accessToken", accessToken, accessOptions)
@@ -480,6 +507,7 @@ class authController {
           );
       }
     } catch (error) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -498,12 +526,14 @@ class authController {
         secure: process.env.NODE_ENV === "production",
         expires: new Date(0),
       };
+      logger.info("User logout successfully");
       return res
         .status(STATUS_CODES.OK)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "User logout successfully"));
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -514,9 +544,12 @@ class authController {
     try {
       const { email } = req.body;
 
+      logger.info(`Password reset request for email: ${email}`);
+
       const { error } = forgotsendemailValidation(req.body);
 
       if (error) {
+        logger.warn(`Password reset validation failed for email: ${email}: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -526,6 +559,7 @@ class authController {
 
       const checkEmail = await User.findOne({ email: email });
       if (!checkEmail) {
+        logger.warn(`Invalid email for password reset: ${email}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -622,6 +656,7 @@ class authController {
           message: message,
         });
 
+        logger.info(`Password reset email sent successfully to: ${email}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -631,6 +666,7 @@ class authController {
         checkEmail.forgotPasswordToken = undefined;
         checkEmail.forgotPasswordExpiry = undefined;
         await checkEmail.save({ validateBeforeSave: false });
+        logger.error(`Failed to send password reset email to ${email}: ${error.message}`);
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -638,6 +674,7 @@ class authController {
           );
       }
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -650,12 +687,14 @@ class authController {
       const { token } = req.params;
 
       if (!token) {
+        logger.error("Token is required");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Token is required", STATUS_CODES.BAD_REQUEST));
       }
 
       if (typeof token !== "string") {
+        logger.error("Token must be string");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Token must be string", STATUS_CODES.BAD_REQUEST));
@@ -664,6 +703,7 @@ class authController {
       const { error } = forgotrestpasswordValidation(req.body);
 
       if (error) {
+        logger.error(error.details[0].message);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -672,6 +712,7 @@ class authController {
       }
 
       if (password !== confirmPassword) {
+        logger.error("Password and confirm password is not same");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -693,6 +734,7 @@ class authController {
       });
 
       if (!checkValidation) {
+        logger.error("Token is invalid");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(new ApiError("Token is invalid", STATUS_CODES.BAD_REQUEST));
@@ -704,12 +746,14 @@ class authController {
 
       await checkValidation.save({ validateBeforeSave: false });
 
+      logger.info("Password reset successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(
           new ApiResponse(STATUS_CODES.OK, {}, "Password reset successfully")
         );
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -752,6 +796,7 @@ class authController {
       const checkEmail = await User.findOne({ email: data.email });
 
       if (checkEmail) {
+        logger.error("Email is already exist");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -811,6 +856,7 @@ class authController {
         path: "/",
       };
 
+      logger.info("User signed up with Google successfully");
       return res
         .status(STATUS_CODES.OK)
         .cookie("accessToken", accessToken, accessOptions)
@@ -823,6 +869,7 @@ class authController {
           )
         );
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -865,6 +912,7 @@ class authController {
       const checkEmail = await User.findOne({ email: data.email });
 
       if (!checkEmail) {
+        logger.error("User not found with this email");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -880,6 +928,7 @@ class authController {
       );
 
       if (!comparePassword) {
+        logger.error("Password is incorrect");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -924,6 +973,7 @@ class authController {
           path: "/",
         };
 
+        logger.info("User signed in with Google successfully");
         return res
           .status(STATUS_CODES.OK)
           .cookie("accessToken", accessToken, accessOptions)
@@ -937,6 +987,7 @@ class authController {
           );
       }
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));
@@ -948,6 +999,7 @@ class authController {
       const refreshToken = req?.cookies?.refreshToken;
 
       if (!refreshToken) {
+        logger.error("Unauthorized");
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(new ApiError("Unauthorized", STATUS_CODES.UNAUTHORIZED));
@@ -959,6 +1011,7 @@ class authController {
       ) as any;
 
       if (!decode) {
+        logger.error("Invalid token");
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(new ApiError("Invalid token", STATUS_CODES.UNAUTHORIZED));
@@ -967,6 +1020,7 @@ class authController {
       const user = await User.findById(decode.id);
 
       if (!user) {
+        logger.error("User not found");
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("User not found", STATUS_CODES.NOT_FOUND));
@@ -975,6 +1029,7 @@ class authController {
       const tokens = await generateAccessAndRefreshToken(user._id.toString());
 
       if (!tokens || !tokens.accessToken) {
+        logger.error("Failed to generate tokens");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -996,6 +1051,7 @@ class authController {
         expires: new Date(Date.now() + 15 * 60 * 1000),
         path: "/",
       };
+      logger.info("Refresh token successfully");
       return res
         .status(STATUS_CODES.OK)
         .cookie("accessToken", accessToken, accessOptions)
@@ -1007,6 +1063,7 @@ class authController {
           )
         );
     } catch (error: any) {
+      logger.error(error.message);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(new ApiError(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR));

@@ -10,11 +10,13 @@ import {
   updateUserSchema,
 } from "../../helpers/validator/user/userValidator";
 import { unlinkSync } from "fs";
+import logger from "../../helpers/logger";
 
 class UserController {
   async getProfile(req: RequestWithFile, res: Response) {
     try {
       const userId = req.user._id;
+      logger.info(`Fetching profile for user: userId=${userId}`);
 
       const user = await User.findOne({ _id: userId, isDeleted: false })
         .populate({
@@ -27,15 +29,18 @@ class UserController {
         );
 
       if (!user) {
+        logger.warn(`User not found for profile fetch: userId=${userId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("User not found", STATUS_CODES.NOT_FOUND));
       }
 
+      logger.info(`Profile fetched successfully for user: userId=${userId}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, user, "User fetched"));
     } catch (error) {
+      logger.error(`Error fetching profile: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -52,11 +57,13 @@ class UserController {
       const userId = req.user._id;
       const { fullName } = req.body;
       const file = req?.file?.path;
+      logger.info(`Updating profile for user: userId=${userId}, fullName=${fullName}, hasFile=${!!file}`);
 
       const { error } = updateUserSchema.validate(req.body);
 
       if (error) {
         if (file) unlinkSync(file!);
+        logger.warn(`Validation error for profile update: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -67,6 +74,7 @@ class UserController {
       const user = await User.findOne({ _id: userId, isDeleted: false });
 
       if (!user) {
+        logger.warn(`User not found for profile update: userId=${userId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("User not found", STATUS_CODES.NOT_FOUND));
@@ -80,6 +88,7 @@ class UserController {
 
           if (!deleteimage) {
             if (file) unlinkSync(file!);
+            logger.error("Failed to delete old profile image");
             return res
               .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
               .json(
@@ -106,6 +115,7 @@ class UserController {
         );
 
         if (!updateUser) {
+          logger.error("Failed to update user profile with image");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -125,6 +135,7 @@ class UserController {
         );
 
         if (!updateUser) {
+          logger.error("Failed to update user profile without image");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -136,10 +147,12 @@ class UserController {
         }
       }
 
+      logger.info(`Profile updated successfully for user: userId=${userId}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Profile updated"));
     } catch (error) {
+      logger.error(`Error updating profile: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -155,10 +168,12 @@ class UserController {
     try {
       const userId = req.user._id;
       const { oldPassword, newPassword, confirmPassword } = req.body;
+      logger.info(`Updating password for user: userId=${userId}`);
 
       const { error } = updatePasswordSchema.validate(req.body);
 
       if (error) {
+        logger.warn(`Validation error for password update: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -167,6 +182,7 @@ class UserController {
       }
 
       if (newPassword !== confirmPassword) {
+        logger.warn("Password confirmation mismatch for user: userId=${userId}");
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -182,6 +198,7 @@ class UserController {
       const comparePassword = await finduser.comparePassword(oldPassword);
 
       if (!comparePassword) {
+        logger.warn(`Incorrect old password for user: userId=${userId}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -192,12 +209,14 @@ class UserController {
       finduser.password = confirmPassword;
       await finduser.save({ validateBeforeSave: false });
 
+      logger.info(`Password updated successfully for user: userId=${userId}`);
       return res
         .status(STATUS_CODES.OK)
         .json(
           new ApiResponse(STATUS_CODES.OK, {}, "Password changed successfully")
         );
     } catch (error) {
+      logger.error(`Error updating password: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -212,8 +231,11 @@ class UserController {
   async deleteAccount(req: RequestWithFile, res: Response) {
     try {
       const userId = req.user._id;
+      logger.info(`Deleting account for user: userId=${userId}`);
+
       const user = await User.findById(userId);
       if (!user) {
+        logger.warn(`User not found for account deletion: userId=${userId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("User not found", STATUS_CODES.NOT_FOUND));
@@ -226,6 +248,7 @@ class UserController {
         secure: process.env.NODE_ENV === "production",
         expires: new Date(0),
       };
+      logger.info(`Account deleted successfully for user: userId=${userId}`);
       return res
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
@@ -234,6 +257,7 @@ class UserController {
           new ApiResponse(STATUS_CODES.OK, {}, "User deleted successfully")
         );
     } catch (error) {
+      logger.error(`Error deleting account: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(

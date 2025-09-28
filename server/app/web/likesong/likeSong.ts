@@ -7,16 +7,19 @@ import ApiResponse from "../../config/apiResponse";
 import STATUS_CODES from "../../config/httpStatusCode";
 import { LIKED_SONG } from "../../config/redisKeys";
 import redis from "../../config/redis";
+import logger from "../../helpers/logger";
 
 class LikeSongController {
   async likeSong(req: Request, res: Response) {
     try {
       const { songId } = req.params;
       const userId = req.user?._id;
+      logger.info(`Liking song: songId=${songId}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
       if (findUser?.subscriptionStatus === "Free") {
+        logger.warn(`Free user attempted to like song: userId=${userId}, songId=${songId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -34,6 +37,7 @@ class LikeSongController {
         await newLike.save();
         await Song.findByIdAndUpdate(songId, { $push: { liked: userId } });
         await redis.del(`${LIKED_SONG}:${userId}`);
+        logger.info(`New like created: songId=${songId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Song liked"));
@@ -47,6 +51,7 @@ class LikeSongController {
           $pull: { liked: userId },
         });
         await redis.del(`${LIKED_SONG}:${userId}`);
+        logger.info(`Song unliked: songId=${songId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Song unliked"));
@@ -58,11 +63,13 @@ class LikeSongController {
           $push: { liked: userId },
         });
         await redis.del(`${LIKED_SONG}:${userId}`);
+        logger.info(`Song liked again: songId=${songId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Song liked"));
       }
     } catch (error) {
+      logger.error(`Error liking song: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -77,10 +84,12 @@ class LikeSongController {
   async getLikedSongs(req: Request, res: Response) {
     try {
       const userId = req.user?._id;
+      logger.info(`Fetching liked songs for user: userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
       if (findUser?.subscriptionStatus === "Free") {
+        logger.warn(`Free user attempted to fetch liked songs: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -94,6 +103,7 @@ class LikeSongController {
       const getRedis = await redis.get(`${LIKED_SONG}:${userId}`);
 
       if (getRedis) {
+        logger.info(`Liked songs fetched from cache for user: userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -170,17 +180,21 @@ class LikeSongController {
         },
       ]);
 
-      if (!likedSongs)
+      if (!likedSongs) {
+        logger.warn(`No liked songs found for user: userId=${userId}`);
         return res.status(STATUS_CODES.NOT_FOUND).json({
           message: "Something went wrong while fetching liked songs",
           status: STATUS_CODES.NOT_FOUND,
         });
+      }
 
       await redis.setnx(`${LIKED_SONG}:${userId}`, JSON.stringify(likedSongs));
+      logger.info(`Liked songs fetched successfully for user: userId=${userId}, count=${likedSongs.length}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, likedSongs, "Liked Songs"));
     } catch (error) {
+      logger.error(`Error fetching liked songs: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(

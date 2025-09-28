@@ -11,6 +11,7 @@ import { uploadFile, deleteImage } from "../../helpers/cloudinary";
 import fs from "fs";
 import { ALBUM, SONG } from "../../config/redisKeys";
 import Radis from "../../config/redis";
+import logger from "../../helpers/logger";
 
 class AlbumController {
   async createAlbum(req: RequestWithFile, res: Response) {
@@ -19,10 +20,13 @@ class AlbumController {
       const artistId = req.user?._id.toString();
       const imageFile = req?.file?.path;
 
+      logger.info(`Creating album: title=${title}, artistId=${artistId}`);
+
       const { error } = createAlbumSchema.validate(req.body);
 
       if (error) {
         fs.unlinkSync(imageFile!);
+        logger.warn(`Validation error for album creation: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -34,6 +38,7 @@ class AlbumController {
         const uploadResult = await uploadFile(imageFile);
 
         if (!uploadResult) {
+          logger.error("Image upload failed");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -52,6 +57,7 @@ class AlbumController {
         });
 
         if (!album) {
+          logger.error("Album creation failed");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -62,6 +68,7 @@ class AlbumController {
             );
         }
         await Radis.del(`${ALBUM}:${artistId}`);
+        logger.info(`Album created successfully: ${album._id}`);
         return res
           .status(STATUS_CODES.CREATED)
           .json(
@@ -73,6 +80,7 @@ class AlbumController {
           );
       }
     } catch (error) {
+      logger.error(`Error creating album: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -86,11 +94,14 @@ class AlbumController {
 
   async getAllAlbums(req: RequestWithFile, res: Response) {
     try {
+      logger.info("Fetching all albums");
+
       const albums = await Album.aggregate([
         { $match: { isDeleted: false, isPublished: true } },
       ]);
 
       if (!albums) {
+        logger.error("Albums not found");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -98,10 +109,12 @@ class AlbumController {
           );
       }
 
+      logger.info("All albums fetched successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, albums, "Albums fetched"));
     } catch (error) {
+      logger.error(`Error fetching all albums: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -115,6 +128,8 @@ class AlbumController {
 
   async getRecentAllAlbums(req: RequestWithFile, res: Response) {
     try {
+      logger.info("Fetching recent albums");
+
       const albums = await Album.aggregate([
         { $match: { isDeleted: false, isPublished: true } },
         { $sort: { createdAt: -1 } },
@@ -122,6 +137,7 @@ class AlbumController {
       ]);
 
       if (!albums) {
+        logger.error("Recent albums not found");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -129,10 +145,12 @@ class AlbumController {
           );
       }
 
+      logger.info("Recent albums fetched successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, albums, "Albums fetched"));
     } catch (error) {
+      logger.error(`Error fetching recent albums: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -146,12 +164,15 @@ class AlbumController {
 
   async getTendAllAlbums(req: RequestWithFile, res: Response) {
     try {
+      logger.info("Fetching trending albums");
+
       const albums = await Album.aggregate([
         { $match: { isDeleted: false, isPublished: true } },
         { $sample: { size: 20 } },
       ]);
 
       if (!albums) {
+        logger.error("Trending albums not found");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -159,10 +180,12 @@ class AlbumController {
           );
       }
 
+      logger.info("Trending albums fetched successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, albums, "Albums fetched"));
     } catch (error) {
+      logger.error(`Error fetching trending albums: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -176,12 +199,15 @@ class AlbumController {
 
   async getMadeForYouAllAlbums(req: RequestWithFile, res: Response) {
     try {
+      logger.info("Fetching made for you albums");
+
       const albums = await Album.aggregate([
         { $match: { isDeleted: false, isPublished: true } },
         { $sample: { size: 12 } },
       ]);
 
       if (!albums) {
+        logger.error("Made for you albums not found");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -189,10 +215,12 @@ class AlbumController {
           );
       }
 
+      logger.info("Made for you albums fetched successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, albums, "Albums fetched"));
     } catch (error) {
+      logger.error(`Error fetching made for you albums: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -207,6 +235,8 @@ class AlbumController {
   async getSingelAlbum(req: RequestWithFile, res: Response) {
     try {
       const slugId = req.params.id;
+      logger.info(`Fetching single album: slugId=${slugId}`);
+
       const album = await Album.aggregate([
         { $match: { slug: slugId, isDeleted: false } },
         {
@@ -285,15 +315,18 @@ class AlbumController {
       ]);
 
       if (!album) {
+        logger.warn("Single album not found");
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Album not found", STATUS_CODES.NOT_FOUND));
       }
 
+      logger.info("Single album fetched successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, album, "Album fetched"));
     } catch (error) {
+      logger.error(`Error fetching single album: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -308,9 +341,11 @@ class AlbumController {
   async getAllAlbumsBYArtist(req: RequestWithFile, res: Response) {
     try {
       const artistId = req.user?._id;
+      logger.info(`Fetching albums by artist: artistId=${artistId}`);
 
       const getRedis = await Radis.get(`${ALBUM}:${artistId}`);
       if (getRedis) {
+        logger.info("Albums by artist fetched from cache");
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -328,6 +363,7 @@ class AlbumController {
       ]);
 
       if (!albums) {
+        logger.error("Albums by artist not found");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -336,11 +372,13 @@ class AlbumController {
       }
 
       await Radis.set(`${ALBUM}:${artistId}`, JSON.stringify(albums));
+      logger.info("Albums by artist fetched successfully");
 
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, albums, "Albums fetched"));
     } catch (error) {
+      logger.error(`Error fetching albums by artist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -356,9 +394,11 @@ class AlbumController {
     try {
       const slugId = req.params.id;
       const artistId = req.user?._id;
+      logger.info(`Fetching single album by artist: slugId=${slugId}, artistId=${artistId}`);
 
       const getRedis = await Radis.get(`${ALBUM}:${artistId}:${slugId}`);
       if (getRedis) {
+        logger.info("Single album by artist fetched from cache");
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -391,17 +431,20 @@ class AlbumController {
       ]);
 
       if (!album) {
+        logger.warn("Single album by artist not found");
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Album not found", STATUS_CODES.NOT_FOUND));
       }
 
       await Radis.set(`${ALBUM}:${artistId}:${slugId}`, JSON.stringify(album));
+      logger.info("Single album by artist fetched successfully");
 
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, album, "Album fetched"));
     } catch (error) {
+      logger.error(`Error fetching single album by artist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -419,19 +462,22 @@ class AlbumController {
       const artistId = req.user?._id.toString();
       const { title, artistName } = req.body;
       const imageFile = req?.file?.path;
+      logger.info(`Updating album: slugId=${slugId}, artistId=${artistId}`);
 
       const { error } = createAlbumSchema.validate(req.body);
 
       if (error) {
         fs.unlinkSync(imageFile!);
+        logger.warn(`Validation error for album update: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
-          .json(new ApiError(error.message, STATUS_CODES.BAD_REQUEST));
+          .json(new ApiError(error.details[0].message, STATUS_CODES.BAD_REQUEST));
       }
 
       const album = await Album.findOne({ slug: slugId, artistId });
 
       if (!album) {
+        logger.warn("Album not found or not owned for update");
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -446,6 +492,7 @@ class AlbumController {
         const deleteimage = await deleteImage(album.imageUrl?.publicId!);
         if (!deleteimage) {
           fs.unlinkSync(imageFile!);
+          logger.error("Image deletion failed during update");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -459,6 +506,7 @@ class AlbumController {
         const uploadResult = await uploadFile(imageFile);
 
         if (!uploadResult) {
+          logger.error("Image upload failed during update");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -483,11 +531,13 @@ class AlbumController {
 
       await Radis.del(`${ALBUM}:${artistId}`);
       await Radis.del(`${ALBUM}:${artistId}:${slugId}`);
+      logger.info("Album updated successfully");
 
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Album updated"));
     } catch (error) {
+      logger.error(`Error updating album: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -504,10 +554,12 @@ class AlbumController {
       const albumId = req.params.id;
       const slugId = req.params.slug;
       const artistId = req.user?._id.toString();
+      logger.info(`Deleting album: albumId=${albumId}, artistId=${artistId}`);
 
       const album = await Album.findOne({ _id: albumId, artistId });
 
       if (!album) {
+        logger.warn("Album not found or not owned for deletion");
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -534,11 +586,13 @@ class AlbumController {
       for (const song of album.songs) {
         await Radis.del(`${SONG}:${albumId}:${song.toString()}`);
       }
+      logger.info("Album deleted successfully");
 
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Album deleted"));
     } catch (error) {
+      logger.error(`Error deleting album: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -555,10 +609,12 @@ class AlbumController {
       const albumId = req.params.id;
       const slugId = req.params.slug;
       const artistId = req.user?._id.toString();
+      logger.info(`Toggling publish status for album: albumId=${albumId}, artistId=${artistId}`);
 
       const album = await Album.findOne({ _id: albumId });
 
       if (!album) {
+        logger.error("Album not found for publish toggle");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -570,6 +626,7 @@ class AlbumController {
       }
 
       if (album?.artistId.toString() !== artistId) {
+        logger.warn("Unauthorized access to toggle publish status");
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -589,6 +646,7 @@ class AlbumController {
         }
         await Radis.del(`${ALBUM}:${artistId}`);
         await Radis.del(`${ALBUM}:${artistId}:${slugId}`);
+        logger.info("Album unpublished successfully");
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Unpublished"));
@@ -601,11 +659,13 @@ class AlbumController {
         }
         await Radis.del(`${ALBUM}:${artistId}`);
         await Radis.del(`${ALBUM}:${artistId}:${slugId}`);
+        logger.info("Album published successfully");
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Published"));
       }
     } catch (error) {
+      logger.error(`Error toggling publish status for album: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(

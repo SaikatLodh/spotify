@@ -4,11 +4,13 @@ import ApiError from "../../config/apiError";
 import ApiResponse from "../../config/apiResponse";
 import STATUS_CODES from "../../config/httpStatusCode";
 import { Request, Response } from "express";
+import logger from "../../helpers/logger";
 
 class ArtistController {
   async getDashboard(req: Request, res: Response) {
     try {
       const artistId = req.user?._id;
+      logger.info(`Fetching dashboard for artist: artistId=${artistId}`);
 
       const [totalAlbums, totalSongs, totalListens] = await Promise.all([
         Album.countDocuments({ artistId, isDeleted: false, isPublished: true }),
@@ -28,6 +30,7 @@ class ArtistController {
         return acc + song.liked.length;
       }, 0);
 
+      logger.info("Dashboard fetched successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(
@@ -38,6 +41,7 @@ class ArtistController {
           )
         );
     } catch (error) {
+      logger.error(`Error fetching dashboard: ${error instanceof Error ? error.message : String(error)}`);
       return res
         .status(STATUS_CODES.BAD_REQUEST)
         .json(

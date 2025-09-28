@@ -11,6 +11,7 @@ import fs from "fs";
 import { PLAYLIST } from "../../config/redisKeys";
 import redis from "../../config/redis";
 import { ObjectId } from "mongodb";
+import logger from "../../helpers/logger";
 
 class PlaylistController {
   createPlaylist = async (req: RequestWithFile, res: Response) => {
@@ -20,6 +21,7 @@ class PlaylistController {
       const image = (
         req.files as { [fieldname: string]: Express.Multer.File[] }
       ).image?.[0]?.path;
+      logger.info(`Creating playlist: title=${title}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -28,6 +30,7 @@ class PlaylistController {
         findUser?.subscriptionStatus === "Standard"
       ) {
         fs.unlinkSync(image);
+        logger.warn(`Free/Standard user attempted to create playlist: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -42,7 +45,7 @@ class PlaylistController {
 
       if (error) {
         if (image) fs.unlinkSync(image);
-
+        logger.warn(`Validation error for playlist creation: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -64,6 +67,7 @@ class PlaylistController {
           });
 
           if (!playlist) {
+            logger.error("Playlist creation failed");
             return res
               .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
               .json(
@@ -81,6 +85,7 @@ class PlaylistController {
         });
 
         if (!playlist) {
+          logger.error("Playlist creation failed");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -93,11 +98,13 @@ class PlaylistController {
       }
 
       await redis.del(`${PLAYLIST}:${userId}`);
+      logger.info("Playlist created successfully");
 
       return res
         .status(STATUS_CODES.CREATED)
         .json(new ApiResponse(STATUS_CODES.CREATED, {}, "Playlist created"));
     } catch (error) {
+      logger.error(`Error creating playlist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -112,6 +119,7 @@ class PlaylistController {
   getPlaylists = async (req: Request, res: Response) => {
     try {
       const userId = req.user?._id.toString();
+      logger.info(`Fetching playlists for user: userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -119,6 +127,7 @@ class PlaylistController {
         findUser?.subscriptionStatus === "Free" ||
         findUser?.subscriptionStatus === "Standard"
       ) {
+        logger.warn(`Free/Standard user attempted to fetch playlists: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -132,6 +141,7 @@ class PlaylistController {
       const getRedis = await redis.get(`${PLAYLIST}:${userId}`);
       if (getRedis) {
         const playlists = JSON.parse(getRedis);
+        logger.info(`Playlists fetched from cache for user: userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -142,6 +152,7 @@ class PlaylistController {
       const playlists = await Playlist.find({ userId, isDeleted: false });
 
       if (!playlists) {
+        logger.error("Failed to fetch playlists from database");
         return res
           .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
           .json(
@@ -153,10 +164,12 @@ class PlaylistController {
       }
 
       await redis.setnx(`${PLAYLIST}:${userId}`, JSON.stringify(playlists));
+      logger.info(`Playlists fetched successfully for user: userId=${userId}, count=${playlists.length}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, playlists, "Playlists fetched"));
     } catch (error) {
+      logger.error(`Error fetching playlists: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -172,6 +185,7 @@ class PlaylistController {
     try {
       const slugId = req.params.slugId;
       const userId = req.user?._id.toString();
+      logger.info(`Fetching single playlist: slugId=${slugId}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -179,6 +193,7 @@ class PlaylistController {
         findUser?.subscriptionStatus === "Free" ||
         findUser?.subscriptionStatus === "Standard"
       ) {
+        logger.warn(`Free/Standard user attempted to fetch playlist: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -192,6 +207,7 @@ class PlaylistController {
       const getRedis = await redis.get(`${PLAYLIST}:${userId}:${slugId}`);
       if (getRedis) {
         const playlist = JSON.parse(getRedis);
+        logger.info(`Playlist fetched from cache: slugId=${slugId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, playlist, "Playlist fetched"));
@@ -268,6 +284,7 @@ class PlaylistController {
       ]);
 
       if (!playlist) {
+        logger.warn(`Playlist not found: slugId=${slugId}`);
         return res
           .status(STATUS_CODES.NOT_FOUND)
           .json(new ApiError("Playlist not found", STATUS_CODES.NOT_FOUND));
@@ -277,10 +294,12 @@ class PlaylistController {
         `${PLAYLIST}:${userId}:${slugId}`,
         JSON.stringify(playlist)
       );
+      logger.info(`Playlist fetched successfully: slugId=${slugId}, userId=${userId}`);
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, playlist, "Playlist fetched"));
     } catch (error) {
+      logger.error(`Error fetching playlist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -300,6 +319,7 @@ class PlaylistController {
       const image = (
         req.files as { [fieldname: string]: Express.Multer.File[] }
       )?.image?.[0]?.path;
+      logger.info(`Updating playlist: slugId=${slugId}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -308,6 +328,7 @@ class PlaylistController {
         findUser?.subscriptionStatus === "Standard"
       ) {
         fs.unlinkSync(image);
+        logger.warn(`Free/Standard user attempted to update playlist: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -321,7 +342,7 @@ class PlaylistController {
       const { error } = createPlaylistSchema.validate(req.body);
       if (error) {
         if (image) fs.unlinkSync(image);
-
+        logger.warn(`Validation error for playlist update: ${error.details[0].message}`);
         return res
           .status(STATUS_CODES.BAD_REQUEST)
           .json(
@@ -332,6 +353,7 @@ class PlaylistController {
       const playlist = await Playlist.findOne({ slug: slugId, userId });
 
       if (!playlist) {
+        logger.warn(`Playlist not found or not owned for update: slugId=${slugId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -359,6 +381,7 @@ class PlaylistController {
         );
 
         if (!updatePlaylist) {
+          logger.error("Playlist update failed");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -371,6 +394,7 @@ class PlaylistController {
 
         await redis.del(`${PLAYLIST}:${userId}`);
         await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        logger.info("Playlist updated successfully");
 
         return res
           .status(STATUS_CODES.OK)
@@ -380,11 +404,13 @@ class PlaylistController {
         await playlist.save({ validateBeforeSave: false });
         await redis.del(`${PLAYLIST}:${userId}`);
         await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        logger.info("Playlist updated successfully");
         return res
           .status(STATUS_CODES.OK)
           .json(new ApiResponse(STATUS_CODES.OK, {}, "Playlist updated"));
       }
     } catch (error) {
+      logger.error(`Error updating playlist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -400,6 +426,7 @@ class PlaylistController {
     try {
       const slugId = req.params.slugId;
       const userId = req.user?._id.toString();
+      logger.info(`Deleting playlist: slugId=${slugId}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -407,6 +434,7 @@ class PlaylistController {
         findUser?.subscriptionStatus === "Free" ||
         findUser?.subscriptionStatus === "Standard"
       ) {
+        logger.warn(`Free/Standard user attempted to delete playlist: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -420,6 +448,7 @@ class PlaylistController {
       const playlist = await Playlist.findOne({ slug: slugId, userId });
 
       if (!playlist) {
+        logger.warn(`Playlist not found or not owned for deletion: slugId=${slugId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -434,10 +463,12 @@ class PlaylistController {
       await playlist.save({ validateBeforeSave: false });
       await redis.del(`${PLAYLIST}:${userId}`);
       await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
+      logger.info("Playlist deleted successfully");
       return res
         .status(STATUS_CODES.OK)
         .json(new ApiResponse(STATUS_CODES.OK, {}, "Playlist deleted"));
     } catch (error) {
+      logger.error(`Error deleting playlist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
@@ -454,6 +485,7 @@ class PlaylistController {
       const slugId = req.params.slugId;
       const songId = req.params.songId;
       const userId = req.user?._id.toString();
+      logger.info(`Adding/removing song to/from playlist: slugId=${slugId}, songId=${songId}, userId=${userId}`);
 
       const findUser = await User.findById(userId);
 
@@ -461,6 +493,7 @@ class PlaylistController {
         findUser?.subscriptionStatus === "Free" ||
         findUser?.subscriptionStatus === "Standard"
       ) {
+        logger.warn(`Free/Standard user attempted to modify playlist: userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -475,6 +508,7 @@ class PlaylistController {
       const playlist = await Playlist.findOne({ slug: slugId, userId });
 
       if (!playlist) {
+        logger.warn(`Playlist not found or not owned for modification: slugId=${slugId}, userId=${userId}`);
         return res
           .status(STATUS_CODES.UNAUTHORIZED)
           .json(
@@ -498,6 +532,7 @@ class PlaylistController {
         );
 
         if (!pullSong) {
+          logger.error("Failed to remove song from playlist");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -509,6 +544,7 @@ class PlaylistController {
         }
         await redis.del(`${PLAYLIST}:${userId}`);
         await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        logger.info("Song removed from playlist successfully");
         return res
           .status(STATUS_CODES.OK)
           .json(
@@ -524,6 +560,7 @@ class PlaylistController {
         );
 
         if (!pushSong) {
+          logger.error("Failed to add song to playlist");
           return res
             .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
             .json(
@@ -536,6 +573,7 @@ class PlaylistController {
 
         await redis.del(`${PLAYLIST}:${userId}`);
         await redis.del(`${PLAYLIST}:${userId}:${slugId}`);
+        logger.info("Song added to playlist successfully");
 
         return res
           .status(STATUS_CODES.OK)
@@ -544,6 +582,7 @@ class PlaylistController {
           );
       }
     } catch (error) {
+      logger.error(`Error modifying playlist: ${error instanceof Error ? error.message : "Internal Server Error"}`);
       return res
         .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json(
