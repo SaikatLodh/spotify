@@ -8,6 +8,11 @@ import redis from "./config/redis";
 import flash from "connect-flash";
 import express from "express";
 import fs from "fs";
+import swaggerJsDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+import SwaggerOptions from "../swagger.json";
+
+const swaggerDocument = swaggerJsDoc(SwaggerOptions);
 
 const app = express();
 
@@ -65,6 +70,9 @@ app.use(
 );
 
 app.use(flash());
+
+//define swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 import authRoute from "./routes/api/auth/authRoute";
 import userRoute from "./routes/api/user/userRoutes";

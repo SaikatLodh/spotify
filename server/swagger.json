@@ -1,0 +1,74 @@
+{
+  "swaggerDefinition": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Swagger Spotify API",
+      "version": "1.0.0",
+      "description": "Spotify API Documentation",
+      "contact": {
+        "name": "Saikat Lodh"
+      }
+    },
+    "servers": [
+      {
+        "url": "http://localhost:8000"
+      },
+      {
+        "url": "https://spotifymusicplayers.netlify.app"
+      }
+    ],
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "tags": [
+      {
+        "name": "Auth restful API",
+        "description": "Auth API"
+      },
+      {
+        "name": "User restful API",
+        "description": "User API"
+      },
+      {
+        "name": "Album restful API",
+        "description": "Album API"
+      },
+      {
+        "name": "Artist restful API",
+        "description": "Artist API"
+      },
+      {
+        "name": "Songs restful API",
+        "description": "Songs API"
+      },
+      {
+        "name": "Playlist restful API",
+        "description": "Playlist API"
+      },
+      {
+        "name": "LikeSong restful API",
+        "description": "LikeSong API"
+      },
+      {
+        "name": "Subscription Plane restful API",
+        "description": "Subscription Plane API"
+      },
+      {
+        "name": "Subscription restful API",
+        "description": "Subscription API"
+      }
+    ]
+  },
+  "apis": ["./app/app.ts", "./app/routes/api/**/*.ts"]
+}
