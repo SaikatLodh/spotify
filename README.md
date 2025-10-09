@@ -74,9 +74,61 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Environment Variables
+### Environment Variables For Server
 
-See `.env.example` files in `client/` and `server/` directories for required environment variables.
+# Database
+MONGODB_URL=mongodb+srv://saikatlidhroni20019_db_user:050nEqhyNoT2WHGv@cluster0.zogugvs.mongodb.net
+
+# Server
+PORT=8000
+
+# Redis
+REDIS_URL=rediss://red-d2pj87n5r7bs739ph7m0:P4AxQXSEVyAO92HJxqJkHWwRspstETM5@oregon-keyvalue.render.com:6379
+
+# Client URLs
+CLIENT_URL=http://localhost:3000
+CLIENT_URL_ADMIN=http://localhost:8000
+
+# Session
+SESSOIN_SECRET=your_session_secret_here
+
+# JWT Tokens
+ACCESS_TOKEN_SECRET=your_access_token_secret_here
+REFRESH_TOKEN_SECRET=your_refresh_token_secret_here
+ACCESS_TOKEN_EXPIRATION_TIME=15m
+REFRESH_TOKEN_EXPIRATION_TIME=7d
+
+# Email (SMTP)
+SMPT_HOST=smtp.gmail.com
+SMPT_PORT=465
+SMPT_SERVICE=gmail
+SMPT_MAIL=saikatlidhroni20019@gmail.com
+SMPT_PASSWORD=jlos zkbv avrn rcki
+
+# Cloudinary
+CLOUDINARY_NAME=dvkyxnqpc
+CLOUDINARY_API_KEY=894821384124177
+CLOUDINARY_API_SECRET=pKz-VnvbMiTTgc503r5oYZTOcXo
+
+# Google OAuth
+GOOGLE_CLIENT_ID=472593899317-v4jcavlinjcc1oulg7ds484jpfai2mh6.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+
+# Razorpay Payment
+RAZORPAY_KEY_ID=rzp_test_1JwssgEE26nQCz
+RAZORPAY_KEY_SECRET=0hxuGEumQmIGB1SxXQ7HnZPh
+MERCHANT_ACCOUNT_ID=NfZPptfLQIAhzt
+
+
+### Environment Variables For Client
+
+# Base URL for API calls
+NEXT_PUBLIC_BASE_URL=http://localhost:8000/api/v1
+
+# Google OAuth Client ID
+NEXT_PUBLIC_CLIENT_ID_FOR_GOOLE=472593899317-v4jcavlinjcc1oulg7ds484jpfai2mh6.apps.googleusercontent.com
+
+
 
 ### Building for Production
 
